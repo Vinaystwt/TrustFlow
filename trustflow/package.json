@@ -1,0 +1,20 @@
+{
+  "name": "trustflow",
+  "version": "1.0.0",
+  "description": "TrustFlow: PayFi protocol with on-chain trust scoring on QIE Blockchain",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "deploy:testnet": "npx hardhat run scripts/deploy-testnet.js --network qieTestnet",
+    "deploy:mainnet": "npx hardhat run scripts/deploy-mainnet.js --network qieMainnet",
+    "seed": "npx hardhat run scripts/seed-demo.js --network qieTestnet"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0",
+    "dotenv": "^16.3.1"
+  }
+}
