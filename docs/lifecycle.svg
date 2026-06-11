@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 720" width="800" height="720" font-family="-apple-system, Segoe UI, Roboto, sans-serif">
+  <rect width="800" height="720" fill="#0A1628"/>
+  <defs>
+    <marker id="arl" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#94A3B8"/>
+    </marker>
+    <marker id="arlo" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#F59E0B"/>
+    </marker>
+  </defs>
+
+  <text x="400" y="42" text-anchor="middle" fill="#E2E8F0" font-size="22" font-weight="700">Agreement Lifecycle</text>
+
+  <!-- steps -->
+  <g font-weight="600" font-size="15">
+    <!-- 1 -->
+    <rect x="250" y="70" width="300" height="56" rx="12" fill="rgba(59,130,246,0.15)" stroke="rgba(59,130,246,0.5)" stroke-width="1"/>
+    <circle cx="278" cy="98" r="6" fill="#3B82F6"/>
+    <text x="298" y="94" fill="#E2E8F0">Freelancer creates agreement</text>
+    <text x="298" y="113" fill="#94A3B8" font-size="11" font-weight="400">Defines milestones</text>
+    <text x="568" y="102" fill="#94A3B8" font-size="12" font-weight="500">Draft</text>
+
+    <line x1="400" y1="126" x2="400" y2="154" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arl)"/>
+
+    <!-- 2 -->
+    <rect x="250" y="158" width="300" height="56" rx="12" fill="rgba(100,116,139,0.18)" stroke="rgba(100,116,139,0.55)" stroke-width="1"/>
+    <circle cx="278" cy="186" r="6" fill="#64748B"/>
+    <text x="298" y="182" fill="#E2E8F0">Share funding link</text>
+    <text x="298" y="201" fill="#94A3B8" font-size="11" font-weight="400">Send to client</text>
+
+    <line x1="400" y1="214" x2="400" y2="242" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arl)"/>
+
+    <!-- 3 -->
+    <rect x="250" y="246" width="300" height="56" rx="12" fill="rgba(16,185,129,0.16)" stroke="rgba(16,185,129,0.5)" stroke-width="1"/>
+    <circle cx="278" cy="274" r="6" fill="#10B981"/>
+    <text x="298" y="270" fill="#E2E8F0">Client funds in QUSDC</text>
+    <text x="298" y="289" fill="#94A3B8" font-size="11" font-weight="400">Escrowed on-chain</text>
+    <text x="568" y="278" fill="#94A3B8" font-size="12" font-weight="500">Active</text>
+
+    <line x1="400" y1="302" x2="400" y2="330" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arl)"/>
+
+    <!-- 4 -->
+    <rect x="250" y="334" width="300" height="56" rx="12" fill="rgba(83,74,183,0.18)" stroke="rgba(83,74,183,0.55)" stroke-width="1"/>
+    <circle cx="278" cy="362" r="6" fill="#534AB7"/>
+    <text x="298" y="358" fill="#E2E8F0">Freelancer delivers milestone</text>
+    <text x="298" y="377" fill="#94A3B8" font-size="11" font-weight="400">Uploads proof URI</text>
+
+    <line x1="400" y1="390" x2="400" y2="418" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arl)"/>
+
+    <!-- 5 -->
+    <rect x="250" y="422" width="300" height="56" rx="12" fill="rgba(16,185,129,0.16)" stroke="rgba(16,185,129,0.5)" stroke-width="1"/>
+    <circle cx="278" cy="450" r="6" fill="#10B981"/>
+    <text x="298" y="446" fill="#E2E8F0">Client approves</text>
+    <text x="298" y="465" fill="#94A3B8" font-size="11" font-weight="400">Payment releases instantly</text>
+
+    <line x1="400" y1="478" x2="400" y2="506" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arl)"/>
+
+    <!-- 6 -->
+    <rect x="250" y="510" width="300" height="56" rx="12" fill="rgba(245,158,11,0.18)" stroke="rgba(245,158,11,0.55)" stroke-width="1"/>
+    <circle cx="278" cy="538" r="6" fill="#F59E0B"/>
+    <text x="298" y="534" fill="#E2E8F0">Trust scores update</text>
+    <text x="298" y="553" fill="#94A3B8" font-size="11" font-weight="400">Both parties gain reputation</text>
+
+    <line x1="400" y1="566" x2="400" y2="594" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arl)"/>
+
+    <!-- 7 -->
+    <rect x="250" y="598" width="300" height="56" rx="12" fill="rgba(34,197,94,0.18)" stroke="rgba(34,197,94,0.55)" stroke-width="1"/>
+    <circle cx="278" cy="626" r="6" fill="#22C55E"/>
+    <text x="298" y="622" fill="#E2E8F0">Agreement completed</text>
+    <text x="298" y="641" fill="#94A3B8" font-size="11" font-weight="400">All milestones paid</text>
+    <text x="556" y="630" fill="#94A3B8" font-size="12" font-weight="500">Completed</text>
+  </g>
+
+  <!-- loop arrow: 6 back to 4 -->
+  <path d="M 550 538 C 660 538, 660 362, 550 362" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arlo)"/>
+  <text x="668" y="454" fill="#F59E0B" font-size="12" transform="rotate(90 668 454)" text-anchor="middle">More milestones?</text>
+</svg>

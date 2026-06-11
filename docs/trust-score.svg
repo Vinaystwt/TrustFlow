@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 560" width="800" height="560" font-family="-apple-system, Segoe UI, Roboto, sans-serif">
+  <rect width="800" height="560" fill="#0A1628"/>
+  <defs>
+    <marker id="art" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+
+  <text x="400" y="40" text-anchor="middle" fill="#E2E8F0" font-size="22" font-weight="700">Trust Score System</text>
+
+  <!-- Inputs -->
+  <g font-size="13" font-weight="600">
+    <rect x="40" y="72" width="230" height="46" rx="9" fill="rgba(59,130,246,0.15)" stroke="rgba(59,130,246,0.5)" stroke-width="1"/>
+    <circle cx="64" cy="95" r="5" fill="#3B82F6"/>
+    <text x="80" y="100" fill="#E2E8F0">Completed agreements <tspan fill="#94A3B8" font-weight="400">+100</tspan></text>
+
+    <rect x="40" y="130" width="230" height="46" rx="9" fill="rgba(59,130,246,0.15)" stroke="rgba(59,130,246,0.5)" stroke-width="1"/>
+    <circle cx="64" cy="153" r="5" fill="#3B82F6"/>
+    <text x="80" y="158" fill="#E2E8F0">Transaction volume <tspan fill="#94A3B8" font-weight="400">+10/1k</tspan></text>
+
+    <rect x="40" y="188" width="230" height="46" rx="9" fill="rgba(16,185,129,0.16)" stroke="rgba(16,185,129,0.5)" stroke-width="1"/>
+    <circle cx="64" cy="211" r="5" fill="#10B981"/>
+    <text x="80" y="216" fill="#E2E8F0">QIE Pass verified <tspan fill="#94A3B8" font-weight="400">+200</tspan></text>
+
+    <rect x="40" y="246" width="230" height="46" rx="9" fill="rgba(239,68,68,0.16)" stroke="rgba(239,68,68,0.5)" stroke-width="1"/>
+    <circle cx="64" cy="269" r="5" fill="#EF4444"/>
+    <text x="80" y="274" fill="#E2E8F0">Disputes <tspan fill="#94A3B8" font-weight="400">-200 each</tspan></text>
+  </g>
+
+  <!-- arrows to formula -->
+  <line x1="270" y1="95" x2="360" y2="170" stroke="#94A3B8" stroke-width="1.2" opacity="0.55" marker-end="url(#art)"/>
+  <line x1="270" y1="153" x2="360" y2="178" stroke="#94A3B8" stroke-width="1.2" opacity="0.55" marker-end="url(#art)"/>
+  <line x1="270" y1="211" x2="360" y2="190" stroke="#94A3B8" stroke-width="1.2" opacity="0.55" marker-end="url(#art)"/>
+  <line x1="270" y1="269" x2="360" y2="200" stroke="#94A3B8" stroke-width="1.2" opacity="0.55" marker-end="url(#art)"/>
+
+  <!-- formula box -->
+  <rect x="365" y="146" width="180" height="76" rx="12" fill="rgba(83,74,183,0.2)" stroke="rgba(83,74,183,0.6)" stroke-width="1"/>
+  <text x="455" y="180" text-anchor="middle" fill="#E2E8F0" font-size="15" font-weight="700">Trust score</text>
+  <text x="455" y="200" text-anchor="middle" fill="#E2E8F0" font-size="15" font-weight="700">formula</text>
+
+  <line x1="545" y1="184" x2="612" y2="184" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#art)"/>
+
+  <!-- output -->
+  <rect x="615" y="146" width="150" height="76" rx="12" fill="rgba(245,158,11,0.18)" stroke="rgba(245,158,11,0.6)" stroke-width="1"/>
+  <text x="690" y="184" text-anchor="middle" fill="#F59E0B" font-size="24" font-weight="800">0 – 1000</text>
+  <text x="690" y="206" text-anchor="middle" fill="#94A3B8" font-size="11">Trust Score</text>
+
+  <!-- tier progression -->
+  <text x="40" y="350" fill="#E2E8F0" font-size="15" font-weight="700">Tier progression</text>
+  <g font-weight="700">
+    <rect x="40" y="368" width="168" height="120" rx="11" fill="rgba(100,116,139,0.18)" stroke="rgba(100,116,139,0.55)" stroke-width="1"/>
+    <text x="56" y="396" fill="#94A3B8" font-size="11">Tier 0</text>
+    <text x="56" y="420" fill="#E2E8F0" font-size="17">Newcomer</text>
+    <text x="56" y="444" fill="#64748B" font-size="11" font-weight="400">0 – 199</text>
+    <text x="56" y="464" fill="#94A3B8" font-size="11" font-weight="400">Escrow-only</text>
+
+    <line x1="208" y1="428" x2="232" y2="428" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#art)"/>
+
+    <rect x="234" y="368" width="168" height="120" rx="11" fill="rgba(59,130,246,0.15)" stroke="rgba(59,130,246,0.5)" stroke-width="1"/>
+    <text x="250" y="396" fill="#94A3B8" font-size="11">Tier 1</text>
+    <text x="250" y="420" fill="#E2E8F0" font-size="17">Verified</text>
+    <text x="250" y="444" fill="#3B82F6" font-size="11" font-weight="400">200 – 499</text>
+    <text x="250" y="464" fill="#94A3B8" font-size="11" font-weight="400">48h dispute</text>
+
+    <line x1="402" y1="428" x2="426" y2="428" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#art)"/>
+
+    <rect x="428" y="368" width="168" height="120" rx="11" fill="rgba(16,185,129,0.16)" stroke="rgba(16,185,129,0.5)" stroke-width="1"/>
+    <text x="444" y="396" fill="#94A3B8" font-size="11">Tier 2</text>
+    <text x="444" y="420" fill="#E2E8F0" font-size="17">Trusted</text>
+    <text x="444" y="444" fill="#10B981" font-size="11" font-weight="400">500 – 799</text>
+    <text x="444" y="464" fill="#94A3B8" font-size="11" font-weight="400">24h · priority</text>
+
+    <line x1="596" y1="428" x2="620" y2="428" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#art)"/>
+
+    <rect x="622" y="368" width="168" height="120" rx="11" fill="rgba(245,158,11,0.18)" stroke="rgba(245,158,11,0.55)" stroke-width="1"/>
+    <text x="638" y="396" fill="#94A3B8" font-size="11">Tier 3</text>
+    <text x="638" y="420" fill="#E2E8F0" font-size="17">Elite</text>
+    <text x="638" y="444" fill="#F59E0B" font-size="11" font-weight="400">800 – 1000</text>
+    <text x="638" y="464" fill="#94A3B8" font-size="11" font-weight="400">Instant + advances</text>
+  </g>
+</svg>
