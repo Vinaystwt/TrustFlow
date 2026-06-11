@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --trust-base: #0a1628;
+  --trust-surface: #111d33;
+  --trust-surface-hover: #162440;
+  --trust-border: #1e3050;
+  --trust-accent: #3b82f6;
+  --trust-accent-hover: #2563eb;
+  --trust-progress: #10b981;
+  --trust-warning: #f59e0b;
+  --trust-danger: #ef4444;
+  --trust-text: #e2e8f0;
+  --trust-text-secondary: #94a3b8;
+  --trust-text-dim: #64748b;
+}
+
+html,
+body {
+  background-color: var(--trust-base);
+  color: var(--trust-text);
+  font-family: var(--font-body), sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: var(--font-display), sans-serif;
+}
+
+/* Letter-spacing rules from spec */
+.tracking-display-lg {
+  letter-spacing: -0.03em;
+}
+.tracking-display-md {
+  letter-spacing: -0.02em;
+}
+.font-mono {
+  letter-spacing: 0.02em;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--trust-base);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--trust-border);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2a4368;
+}
+
+/* Top accent gradient line */
+.accent-line {
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--trust-accent), var(--trust-progress));
+}
+
+/* Card base + hover */
+.card {
+  background-color: var(--trust-surface);
+  border: 1px solid var(--trust-border);
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+.card-hover:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.05);
+  transform: translateY(-2px);
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--trust-border);
+  border-radius: 8px;
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.06),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .skeleton::after {
+    animation: none;
+  }
+}
+
+/* RainbowKit accent override */
+:root {
+  --rk-colors-accentColor: #3b82f6;
+}
