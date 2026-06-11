@@ -2,7 +2,7 @@
 
 **Payments that build credit. Built on QIE Blockchain.**
 
-[Live Demo](VERCEL_URL_HERE) | [Smart Contracts](https://testnet.qie.digital/address/0x9db2e380f9100793ea71413224dD7C22F97aD91B) | [Video Demo](VIDEO_URL_HERE)
+[Live Demo](https://trustflow-qie.vercel.app) | [Smart Contracts](https://testnet.qie.digital/address/0x9db2e380f9100793ea71413224dD7C22F97aD91B) | [Video Demo](#)
 
 ---
 
