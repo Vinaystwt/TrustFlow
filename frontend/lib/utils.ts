@@ -139,7 +139,7 @@ export { TIER_THRESHOLDS }
 // ---------------------------------------------------------------------------
 
 export function formatDate(timestamp: bigint | undefined): string {
-  if (!timestamp || timestamp === 0n) return '—'
+  if (!timestamp || timestamp === 0n) return 'N/A'
   return new Date(Number(timestamp) * 1000).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
