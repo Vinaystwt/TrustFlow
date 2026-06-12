@@ -64,7 +64,6 @@ export function Footer() {
                   Vinay (@vinaystwt)
                 </a>
               </li>
-              <li>Deon Labs</li>
               <li>Built for QIE Hackathon 2026</li>
             </ul>
           </div>

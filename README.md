@@ -170,7 +170,7 @@ Demo walkthrough (90 seconds):
 
 ## Built By
 
-Vinay ([@vinaystwt](https://twitter.com/vinaystwt)) | Deon Labs
+Vinay ([@vinaystwt](https://twitter.com/vinaystwt))
 
 Built for the QIE Blockchain Hackathon 2026.
 
