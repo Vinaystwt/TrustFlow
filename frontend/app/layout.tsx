@@ -4,6 +4,7 @@ import './globals.css'
 import { Providers } from './providers'
 import { ToastProvider } from '@/components/Toast'
 import { Header } from '@/components/Header'
+import { Footer } from '@/components/Footer'
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -24,7 +25,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'TrustFlow — Payments that build credit',
+  title: 'TrustFlow: Payments that build credit',
   description:
     'Create milestone payment agreements on QIE Blockchain. Every completed payment builds your on-chain Trust Score.',
 }
@@ -44,6 +45,7 @@ export default function RootLayout({
             <div className="accent-line" />
             <Header />
             <main>{children}</main>
+            <Footer />
           </ToastProvider>
         </Providers>
       </body>
