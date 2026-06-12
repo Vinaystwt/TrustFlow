@@ -14,11 +14,14 @@ import {
 import { PageWrapper } from '@/components/PageWrapper'
 import { StatusBadge } from '@/components/StatusBadge'
 import { AddressDisplay } from '@/components/AddressDisplay'
+import { Avatar } from '@/components/Avatar'
+import { ActivityFeed } from '@/components/ActivityFeed'
 import { MilestoneTimeline, type Role } from '@/components/MilestoneTimeline'
 import { TransactionButton } from '@/components/TransactionButton'
-import { TrustScoreRing } from '@/components/TrustScoreRing'
+import { AnimatedTrustRing } from '@/components/AnimatedTrustRing'
 import { Skeleton } from '@/components/Skeleton'
 import { useToast } from '@/components/Toast'
+import { useProtocolEvents } from '@/hooks/useEvents'
 import {
   useGetAgreement,
   useGetMilestones,
@@ -56,6 +59,11 @@ export default function AgreementDetailPage() {
   const client = agreement?.client
   const { profile: creatorProfile } = useGetTrustProfile(creator)
   const { profile: clientProfile } = useGetTrustProfile(client)
+
+  const { events } = useProtocolEvents()
+  const agreementEvents = idValid
+    ? events.filter((e) => e.args.agreementId !== undefined && String(e.args.agreementId) === idParam)
+    : []
 
   const { balance } = useQUSDCBalance(address)
   const { allowance, refetch: refetchAllowance } = useQUSDCAllowance(address)
@@ -95,7 +103,7 @@ export default function AgreementDetailPage() {
       )
       toast({
         type: 'success',
-        message: 'Agreement funded — now active!',
+        message: 'Agreement funded. Now active!',
         href: explorerTx(hash),
       })
       refetchAll()
@@ -112,7 +120,7 @@ export default function AgreementDetailPage() {
       const hash = await approveHook.approveMilestone(agreement.id, index)
       toast({
         type: 'success',
-        message: 'Milestone approved — payment released!',
+        message: 'Milestone approved. Payment released!',
         href: explorerTx(hash),
       })
       refetchAll()
@@ -236,7 +244,8 @@ export default function AgreementDetailPage() {
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <p className="text-xs uppercase text-trust-text-dim">Freelancer</p>
-                <div className="mt-1">
+                <div className="mt-1 flex items-center gap-2">
+                  <Avatar address={agreement.creator} size={28} />
                   <AddressDisplay
                     address={agreement.creator}
                     domain={agreement.creatorDomain || undefined}
@@ -245,7 +254,8 @@ export default function AgreementDetailPage() {
               </div>
               <div>
                 <p className="text-xs uppercase text-trust-text-dim">Client</p>
-                <div className="mt-1">
+                <div className="mt-1 flex items-center gap-2">
+                  <Avatar address={agreement.client} size={28} />
                   <AddressDisplay address={agreement.client} />
                 </div>
               </div>
@@ -362,6 +372,14 @@ export default function AgreementDetailPage() {
             )}
           </div>
 
+          {/* Activity on this agreement */}
+          <div className="card mt-6 p-6">
+            <h2 className="mb-4 font-display text-lg font-semibold tracking-display-md text-trust-text">
+              Recent Activity on this Agreement
+            </h2>
+            <ActivityFeed events={agreementEvents} limit={15} emptyText="No activity recorded yet." />
+          </div>
+
           {/* Trust impact */}
           <div className="card mt-6 p-6">
             <h2 className="mb-5 font-display text-lg font-semibold tracking-display-md text-trust-text">
@@ -378,13 +396,9 @@ export default function AgreementDetailPage() {
                 return (
                   <div
                     key={p.label}
-                    className="flex items-center gap-4 rounded-xl bg-trust-base p-4"
+                    className="flex items-center gap-4 rounded-xl bg-bg p-4"
                   >
-                    <TrustScoreRing
-                      score={score}
-                      tier={p.profile?.tier ?? 0}
-                      size="sm"
-                    />
+                    <AnimatedTrustRing score={score} size={80} showLabel={false} />
                     <div>
                       <p className="text-xs uppercase text-trust-text-dim">
                         {p.label}
