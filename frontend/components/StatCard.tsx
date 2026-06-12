@@ -2,7 +2,9 @@
 
 import { ReactNode } from 'react'
 import { motion } from 'framer-motion'
-import { useCountUp } from '@/hooks/useCountUp'
+import { ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { CountUp } from './CountUp'
+import { cx } from '@/lib/utils'
 
 export function StatCard({
   icon,
@@ -11,35 +13,55 @@ export function StatCard({
   decimals = 0,
   prefix = '',
   suffix = '',
+  delta,
+  gradient = false,
 }: {
-  icon: ReactNode
+  icon?: ReactNode
   label: string
   value: number
   decimals?: number
   prefix?: string
   suffix?: string
+  delta?: number
+  gradient?: boolean
 }) {
-  const animated = useCountUp(value)
-  const display = animated.toLocaleString('en-US', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  })
-
   return (
     <motion.div
-      whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(59,130,246,0.08)' }}
-      className="card p-4"
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+      className="card card-hover p-5 sm:p-6"
     >
-      <div className="flex items-center gap-2 text-trust-text-secondary">
-        <span className="text-trust-accent">{icon}</span>
-        <span className="font-body text-xs font-medium uppercase tracking-wide">
-          {label}
+      <div className="flex items-center justify-between">
+        <span className="flex items-center gap-2 text-text-secondary">
+          {icon && <span className="text-brand-primary-light">{icon}</span>}
+          <span className="font-body text-xs font-medium uppercase tracking-wide">
+            {label}
+          </span>
         </span>
+        {delta !== undefined && delta !== 0 && (
+          <span
+            className={cx(
+              'inline-flex items-center gap-0.5 text-xs font-semibold',
+              delta > 0 ? 'text-success' : 'text-danger'
+            )}
+          >
+            {delta > 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
+            {Math.abs(delta)}
+          </span>
+        )}
       </div>
-      <p className="mt-2 font-display text-2xl font-bold tracking-display-md text-trust-text">
-        {prefix}
-        {display}
-        {suffix && <span className="ml-1 text-base text-trust-text-secondary">{suffix}</span>}
+      <p
+        className={cx(
+          'mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl',
+          gradient ? 'gradient-text' : 'text-text'
+        )}
+      >
+        <CountUp to={value} decimals={decimals} prefix={prefix} />
+        {suffix && (
+          <span className="ml-1 text-base font-semibold text-text-secondary">
+            {suffix}
+          </span>
+        )}
       </p>
     </motion.div>
   )

@@ -1,26 +1,37 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAccount, useReadContracts } from 'wagmi'
 import { motion } from 'framer-motion'
-import { Wallet, Activity, CheckCircle2, Gauge, Plus, Inbox } from 'lucide-react'
+import {
+  Wallet,
+  Activity,
+  CheckCircle2,
+  AlertTriangle,
+  Plus,
+  Inbox,
+  BadgeCheck,
+  Trophy,
+  ArrowRight,
+} from 'lucide-react'
 import { PageWrapper } from '@/components/PageWrapper'
-import { TrustScoreRing } from '@/components/TrustScoreRing'
+import { AnimatedTrustRing } from '@/components/AnimatedTrustRing'
 import { TierBadge } from '@/components/TierBadge'
 import { StatCard } from '@/components/StatCard'
 import { AgreementCard } from '@/components/AgreementCard'
+import { ActivityFeed } from '@/components/ActivityFeed'
+import { OnboardingModal } from '@/components/OnboardingModal'
 import { SkeletonCard, SkeletonRing, SkeletonStat } from '@/components/Skeleton'
-import {
-  useGetTrustProfile,
-  useGetUserAgreements,
-} from '@/hooks/useTrustFlow'
+import { useGetTrustProfile, useGetUserAgreements } from '@/hooks/useTrustFlow'
+import { useProtocolEvents } from '@/hooks/useEvents'
 import { TRUSTFLOW_ABI, TRUSTFLOW_ADDRESS } from '@/lib/contracts'
 import {
   qusdcToNumber,
   nextTierAt,
   tierInfo,
+  truncateAddress,
   type Agreement,
   type Milestone,
 } from '@/lib/utils'
@@ -39,6 +50,7 @@ export default function DashboardPage() {
 
   const { profile, isLoading: profileLoading } = useGetTrustProfile(address)
   const { ids, isLoading: idsLoading } = useGetUserAgreements(address)
+  const { events } = useProtocolEvents()
 
   const agreementContracts = useMemo(
     () =>
@@ -50,7 +62,6 @@ export default function DashboardPage() {
       })),
     [ids]
   )
-
   const milestoneContracts = useMemo(
     () =>
       (ids ?? []).map((id) => ({
@@ -62,22 +73,16 @@ export default function DashboardPage() {
     [ids]
   )
 
-  const { data: agreementDataRaw, isLoading: agLoading } = useReadContracts({
+  const { data: agRaw, isLoading: agLoading } = useReadContracts({
     contracts: agreementContracts as never,
     query: { enabled: agreementContracts.length > 0 },
   })
-
-  const { data: milestoneDataRaw } = useReadContracts({
+  const { data: msRaw } = useReadContracts({
     contracts: milestoneContracts as never,
     query: { enabled: milestoneContracts.length > 0 },
   })
-
-  const agreementData = agreementDataRaw as
-    | { result?: unknown }[]
-    | undefined
-  const milestoneData = milestoneDataRaw as
-    | { result?: unknown }[]
-    | undefined
+  const agreementData = agRaw as { result?: unknown }[] | undefined
+  const milestoneData = msRaw as { result?: unknown }[] | undefined
 
   const rows = useMemo(() => {
     if (!agreementData) return []
@@ -89,106 +94,126 @@ export default function DashboardPage() {
         return agreement ? { agreement, approved } : null
       })
       .filter((x): x is { agreement: Agreement; approved: number } => !!x)
-      // newest first
       .sort((a, b) => Number(b.agreement.id) - Number(a.agreement.id))
   }, [agreementData, milestoneData])
+
+  const userEvents = useMemo(() => {
+    if (!address) return []
+    const lower = address.toLowerCase()
+    return events.filter((e) => {
+      const a = e.args
+      return ['user', 'creator', 'client', 'recipient'].some(
+        (k) => typeof a[k] === 'string' && (a[k] as string).toLowerCase() === lower
+      )
+    })
+  }, [events, address])
 
   const score = Number(profile?.trustScore ?? 0n)
   const tier = profile?.tier ?? 0
   const next = nextTierAt(score)
+  const verified = !!profile?.qiePassVerified
 
   const totalEarned = useMemo(
     () =>
       rows
-        .filter(
-          (r) => r.agreement.creator.toLowerCase() === address?.toLowerCase()
-        )
+        .filter((r) => r.agreement.creator.toLowerCase() === address?.toLowerCase())
         .reduce((sum, r) => sum + qusdcToNumber(r.agreement.paidAmount), 0),
     [rows, address]
   )
   const activeCount = rows.filter((r) => r.agreement.status === 1).length
   const completedCount = Number(profile?.completedAgreements ?? 0n)
+  const disputeCount = Number(profile?.disputeCount ?? 0n)
 
   const listLoading = idsLoading || agLoading
 
+  // Onboarding for first-time users
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  useEffect(() => {
+    if (!isConnected || listLoading) return
+    let onboarded = false
+    try {
+      onboarded = window.localStorage.getItem('trustflow_onboarded') === 'true'
+    } catch {
+      /* ignore */
+    }
+    if (!onboarded && rows.length === 0) setShowOnboarding(true)
+  }, [isConnected, listLoading, rows.length])
+
+  // Recommended actions
+  const recommendations = useMemo(() => {
+    const recs: { icon: typeof BadgeCheck; title: string; body: string; href: string; cta: string }[] = []
+    if (!verified)
+      recs.push({ icon: BadgeCheck, title: 'Get QIE Pass verified', body: 'Add +200 to your trust score instantly.', href: 'https://www.qie.digital', cta: 'Verify' })
+    if (rows.length === 0)
+      recs.push({ icon: Plus, title: 'Create your first agreement', body: 'Start building your on-chain credit.', href: '/create', cta: 'Create' })
+    if (score >= 500)
+      recs.push({ icon: Trophy, title: 'Browse the leaderboard', body: 'See where you rank among top builders.', href: '/leaderboard', cta: 'View' })
+    if (recs.length < 3)
+      recs.push({ icon: Trophy, title: 'Climb the leaderboard', body: 'Complete more agreements to rank higher.', href: '/leaderboard', cta: 'View' })
+    return recs.slice(0, 3)
+  }, [verified, rows.length, score])
+
   return (
     <PageWrapper>
-      <div className="grid gap-6 lg:grid-cols-[2fr_3fr]">
-        {/* Left column */}
-        <div className="space-y-6">
-          <div className="card flex flex-col items-center p-8">
-            {profileLoading ? (
-              <SkeletonRing />
-            ) : (
-              <>
-                <TrustScoreRing score={score} tier={tier} size="lg" />
-                <div className="mt-5">
-                  <TierBadge tier={tier} />
-                </div>
-                <p className="mt-3 text-sm text-trust-text-secondary">
-                  {next
-                    ? `Next tier at ${next} · ${next - score} points to go`
-                    : 'Top tier reached — Elite'}
-                </p>
-                <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-trust-base">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${Math.min((score / 1000) * 100, 100)}%`,
-                      backgroundColor: tierInfo(tier).color,
-                    }}
-                  />
-                </div>
-              </>
-            )}
-          </div>
+      {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
 
-          <div className="grid grid-cols-2 gap-4">
-            {profileLoading ? (
-              <>
-                <SkeletonStat />
-                <SkeletonStat />
-                <SkeletonStat />
-                <SkeletonStat />
-              </>
-            ) : (
-              <>
-                <StatCard
-                  icon={<Wallet size={15} />}
-                  label="Total Earned"
-                  value={totalEarned}
-                  decimals={2}
-                  suffix="QUSDC"
-                />
-                <StatCard
-                  icon={<Activity size={15} />}
-                  label="Active"
-                  value={activeCount}
-                />
-                <StatCard
-                  icon={<CheckCircle2 size={15} />}
-                  label="Completed"
-                  value={completedCount}
-                />
-                <StatCard
-                  icon={<Gauge size={15} />}
-                  label="Trust Score"
-                  value={score}
-                />
-              </>
-            )}
+      {/* Top banner */}
+      <div className="card relative overflow-hidden p-6 sm:p-8">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-section-1" />
+        <div className="relative flex flex-col items-center gap-8 lg:flex-row lg:items-center">
+          {profileLoading ? (
+            <SkeletonRing />
+          ) : (
+            <AnimatedTrustRing score={score} size={180} startFromZero />
+          )}
+          <div className="flex-1 text-center lg:text-left">
+            <p className="text-sm text-text-secondary">Welcome back,</p>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-text">
+              {truncateAddress(address)}
+            </h1>
+            <div className="mt-3 flex justify-center lg:justify-start">
+              <TierBadge tier={tier} />
+            </div>
+            <p className="mt-3 text-sm text-text-secondary">
+              {next ? `${next - score} points to ${tierInfo(tier + 1).name}` : 'Top tier reached: Elite'}
+            </p>
+            <div className="mt-2 h-2 w-full max-w-sm overflow-hidden rounded-full bg-bg-subtle">
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${Math.min((score / 1000) * 100, 100)}%`, background: 'var(--gradient-trust)' }}
+              />
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Right column */}
+      {/* Stat cards */}
+      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {profileLoading ? (
+          <>
+            <SkeletonStat /><SkeletonStat /><SkeletonStat /><SkeletonStat />
+          </>
+        ) : (
+          <>
+            <StatCard icon={<Wallet size={15} />} label="Total Earned" value={totalEarned} decimals={2} suffix="QUSDC" />
+            <StatCard icon={<Activity size={15} />} label="Active" value={activeCount} />
+            <StatCard icon={<CheckCircle2 size={15} />} label="Completed" value={completedCount} />
+            <StatCard icon={<AlertTriangle size={15} />} label="Disputes" value={disputeCount} />
+          </>
+        )}
+      </div>
+
+      {/* Two columns */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-[3fr_2fr]">
         <div>
           <div className="mb-5 flex items-center justify-between">
-            <h2 className="font-display text-xl font-bold tracking-display-md text-trust-text">
+            <h2 className="font-display text-xl font-bold tracking-tight text-text">
               Active Agreements
             </h2>
             <Link
               href="/create"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-trust-accent px-4 py-2.5 font-display text-sm font-semibold text-white transition-colors hover:bg-trust-accent-hover"
+              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-display text-sm font-semibold text-white"
+              style={{ background: 'var(--gradient-hero)' }}
             >
               <Plus size={16} /> Create New
             </Link>
@@ -196,35 +221,18 @@ export default function DashboardPage() {
 
           {listLoading ? (
             <div className="space-y-4">
-              <SkeletonCard />
-              <SkeletonCard />
-              <SkeletonCard />
+              <SkeletonCard /><SkeletonCard /><SkeletonCard />
             </div>
           ) : rows.length === 0 ? (
-            <div className="card flex flex-col items-center justify-center px-6 py-16 text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-trust-base text-trust-text-dim">
+            <div className="card flex flex-col items-center px-6 py-16 text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-bg-subtle text-text-dim">
                 <Inbox size={22} />
               </span>
-              <p className="mt-4 font-display text-base font-semibold text-trust-text">
-                No agreements yet
-              </p>
-              <p className="mt-1 text-sm text-trust-text-secondary">
-                Create your first one to start building trust.
-              </p>
-              <Link
-                href="/create"
-                className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-trust-accent px-4 py-2.5 font-display text-sm font-semibold text-white transition-colors hover:bg-trust-accent-hover"
-              >
-                <Plus size={16} /> Create Agreement
-              </Link>
+              <p className="mt-4 font-display text-base font-semibold text-text">No agreements yet</p>
+              <p className="mt-1 text-sm text-text-secondary">Create your first one to start building trust.</p>
             </div>
           ) : (
-            <motion.div
-              variants={container}
-              initial="initial"
-              animate="animate"
-              className="space-y-4"
-            >
+            <motion.div variants={container} initial="initial" animate="animate" className="space-y-4">
               {rows.map((r) => (
                 <AgreementCard
                   key={String(r.agreement.id)}
@@ -235,6 +243,45 @@ export default function DashboardPage() {
               ))}
             </motion.div>
           )}
+        </div>
+
+        <div>
+          <h2 className="mb-5 font-display text-xl font-bold tracking-tight text-text">
+            Your Recent Activity
+          </h2>
+          <div className="card p-5">
+            <ActivityFeed events={userEvents} limit={10} emptyText="No activity yet. Create an agreement to begin." />
+          </div>
+        </div>
+      </div>
+
+      {/* Recommended actions */}
+      <div className="mt-10">
+        <h2 className="mb-5 font-display text-xl font-bold tracking-tight text-text">
+          Recommended Actions
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {recommendations.map((rec, i) => {
+            const Icon = rec.icon
+            const external = rec.href.startsWith('http')
+            const inner = (
+              <div className="card card-hover flex h-full flex-col p-5">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-primary/15 text-brand-primary-light">
+                  <Icon size={18} />
+                </span>
+                <h3 className="mt-4 font-display text-base font-semibold text-text">{rec.title}</h3>
+                <p className="mt-1 flex-1 text-sm text-text-secondary">{rec.body}</p>
+                <span className="mt-3 inline-flex items-center gap-1 font-display text-sm font-semibold text-brand-primary-light">
+                  {rec.cta} <ArrowRight size={14} />
+                </span>
+              </div>
+            )
+            return external ? (
+              <a key={i} href={rec.href} target="_blank" rel="noreferrer">{inner}</a>
+            ) : (
+              <Link key={i} href={rec.href}>{inner}</Link>
+            )
+          })}
         </div>
       </div>
     </PageWrapper>
