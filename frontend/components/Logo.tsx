@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import { motion } from 'framer-motion'
 import { cx } from '@/lib/utils'
 
@@ -99,19 +100,16 @@ function Shield({
   )
 }
 
-let counter = 0
-function nextId() {
-  return `lg-${++counter}`
-}
-
 export function LogoMark({ size = 'md' }: { size?: Size }) {
-  return <Shield px={SIZE_PX[size]} gradId={nextId()} />
+  const gradId = useId().replace(/:/g, "")
+  return <Shield px={SIZE_PX[size]} gradId={gradId} />
 }
 
 export function Logo({ size = 'md' }: { size?: Size }) {
+  const gradId = useId().replace(/:/g, "")
   return (
     <span className="inline-flex items-center gap-2">
-      <Shield px={SIZE_PX[size]} gradId={nextId()} />
+      <Shield px={SIZE_PX[size]} gradId={gradId} />
       <span
         className={cx(
           'font-display font-bold tracking-tight text-text',
@@ -131,12 +129,13 @@ export function LogoAnimated({
   size?: Size
   withWordmark?: boolean
 }) {
+  const gradId = useId().replace(/:/g, "")
   return (
     <motion.span
       className="group inline-flex items-center gap-2"
       whileHover="hover"
     >
-      <Shield px={SIZE_PX[size]} animated gradId={nextId()} />
+      <Shield px={SIZE_PX[size]} animated gradId={gradId} />
       {withWordmark && (
         <span
           className={cx(

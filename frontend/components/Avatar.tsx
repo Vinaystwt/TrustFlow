@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useId, useMemo } from 'react'
 
 const PALETTE = [
   ['#6366F1', '#A855F7'],
@@ -42,6 +42,7 @@ export function Avatar({
 
   const cell = size / 3
   const dotR = cell * 0.18
+  const gid = `av-${useId().replace(/:/g, '')}`
 
   return (
     <span
@@ -50,15 +51,12 @@ export function Avatar({
     >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <defs>
-          <linearGradient
-            id={`av-${address}`}
-            gradientTransform={`rotate(${angle})`}
-          >
+          <linearGradient id={gid} gradientTransform={`rotate(${angle})`}>
             <stop offset="0%" stopColor={from} />
             <stop offset="100%" stopColor={to} />
           </linearGradient>
         </defs>
-        <rect width={size} height={size} fill={`url(#av-${address})`} />
+        <rect width={size} height={size} fill={`url(#${gid})`} />
         {dots.map((on, i) =>
           on ? (
             <circle

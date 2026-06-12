@@ -83,6 +83,12 @@ export default function AnalyticsPage() {
         <StatCard icon={<Sigma size={15} />} label="Total Trust Score" value={totalScore} gradient />
       </div>
 
+      {counter === 0 && (
+        <p className="mt-4 text-sm text-text-dim">
+          The protocol is freshly deployed. Stats update in real-time as agreements are created.
+        </p>
+      )}
+
       {/* Tier distribution */}
       <div className="card mt-8 p-6">
         <h2 className="font-display text-lg font-bold tracking-tight text-text">
