@@ -8,11 +8,13 @@ export function SearchBar({
   onChange,
   placeholder = 'Search…',
   className,
+  id,
 }: {
   value: string
   onChange: (v: string) => void
   placeholder?: string
   className?: string
+  id?: string
 }) {
   return (
     <div className={cx('relative', className)}>
@@ -21,6 +23,7 @@ export function SearchBar({
         className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-dim"
       />
       <input
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
