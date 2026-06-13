@@ -17,7 +17,7 @@ const STEPS = [
   { icon: <CircleDollarSign size={18} />, title: 'Client Funds Escrow', description: "Client deposits the full amount into TrustFlow's smart contract." },
   { icon: <Upload size={18} />, title: 'Deliver Work', description: 'Mark milestones complete and upload proof of delivery.' },
   { icon: <Banknote size={18} />, title: 'Receive Payment', description: 'Client approves, payment releases instantly to your wallet.' },
-  { icon: <TrendingUp size={18} />, title: 'Trust Score Grows', description: 'Both parties gain reputation. Higher scores unlock instant settlement and advances.' },
+  { icon: <TrendingUp size={18} />, title: 'Trust Score Grows', description: 'Both parties gain reputation. Higher scores unlock upfront releases and auto-claim settlement.' },
 ]
 
 export function HowItWorks() {
