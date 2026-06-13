@@ -16,19 +16,19 @@ const SCENARIOS = [
     label: 'Complete 5 agreements ($5,000 total)',
     score: 550,
     explain:
-      'Five completed agreements (500) plus 50 for volume puts you at Trusted. You unlock a 24h dispute window and marketplace priority.',
+      'Five completed agreements (500) plus 50 for volume puts you at Trusted. The contract now releases 25% of each milestone upfront on funding.',
   },
   {
     label: 'Get QIE Pass verified',
     score: 750,
     explain:
-      'QIE Pass verification adds a flat 200 point bonus on top of your activity. Verified identity is the fastest way to climb.',
+      'QIE Pass verification adds a flat 200 point bonus on top of your activity. Verified identity is the fastest way to climb the tiers.',
   },
   {
     label: 'Reach Elite tier',
     score: 1000,
     explain:
-      'Sustained completed agreements, high volume, and verification push you to Elite: instant settlement and advance payments.',
+      'Sustained agreements, volume, and verification push you to Elite. Elite users get auto-claim: get paid even if the client goes silent, 24h after delivery.',
   },
 ]
 

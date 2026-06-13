@@ -86,6 +86,23 @@ const SOLIDITY_EXAMPLE = `function createAgreement(
 
 function approveMilestone(uint256 agreementId, uint256 index) external;`
 
+const ENFORCEMENT_EXAMPLE = `// Tier 2: release 25% of each milestone upfront on funding
+if (creatorTier == 2) {
+    uint256 upfront = (milestone.amount * TIER2_UPFRONT_BPS) / 10000;
+    milestone.upfrontReleased = upfront;
+    qusdc.safeTransfer(agreement.creator, upfront - fee);
+}
+
+// Tier 3: set a 24h auto-claim window on delivery
+if (creatorTier == 3) {
+    milestone.claimableAfter = block.timestamp + TIER3_CLAIM_WINDOW;
+}
+
+// Creator auto-claims after the window if the client stays silent
+function claimMilestone(uint256 agreementId, uint256 index) external;
+// Client can block auto-claim inside the window
+function disputeMilestone(uint256 agreementId, uint256 index) external;`
+
 const TS_EXAMPLE = `import { useReadContract } from 'wagmi'
 import { TRUSTFLOW_ABI, TRUSTFLOW_ADDRESS } from '@/lib/contracts'
 
@@ -327,6 +344,42 @@ export default function DocsPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              <h3 className="mt-8 font-display text-lg font-semibold tracking-tight text-text">
+                How tiers are enforced on-chain
+              </h3>
+              <p className="mt-3 leading-relaxed text-text-secondary">
+                In TrustFlowV2 the tier is not cosmetic. The contract reads the
+                freelancer&apos;s tier and applies different settlement rules:
+              </p>
+              <ul className="mt-3 space-y-2 text-sm text-text-secondary">
+                <li>
+                  <span className="font-semibold text-text">Tier 0 / 1:</span> full
+                  escrow. <code className="font-mono text-brand-primary-light">approveMilestone</code>{' '}
+                  releases the full milestone amount on client approval.
+                </li>
+                <li>
+                  <span className="font-semibold text-text">Tier 2 (Trusted):</span>{' '}
+                  <code className="font-mono text-brand-primary-light">fundAgreement</code> releases
+                  25% of each milestone (<code className="font-mono text-brand-primary-light">TIER2_UPFRONT_BPS</code>)
+                  to the creator upfront, recorded as{' '}
+                  <code className="font-mono text-brand-primary-light">upfrontReleased</code>. Approval
+                  pays the remaining 75%.
+                </li>
+                <li>
+                  <span className="font-semibold text-text">Tier 3 (Elite):</span>{' '}
+                  <code className="font-mono text-brand-primary-light">completeMilestone</code> sets{' '}
+                  <code className="font-mono text-brand-primary-light">claimableAfter</code> to 24h
+                  out. If the client does not approve or dispute, the creator calls{' '}
+                  <code className="font-mono text-brand-primary-light">claimMilestone</code> to auto-claim.
+                  The client can block this with{' '}
+                  <code className="font-mono text-brand-primary-light">disputeMilestone</code> inside
+                  the window.
+                </li>
+              </ul>
+              <div className="mt-5">
+                <CodeBlock lang="solidity" code={ENFORCEMENT_EXAMPLE} />
               </div>
             </DocSectionBlock>
 
