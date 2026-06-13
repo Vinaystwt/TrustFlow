@@ -29,6 +29,9 @@ export const metadata: Metadata = {
   title: 'TrustFlow: Payments that build credit',
   description:
     'Create milestone payment agreements on QIE Blockchain. Every completed payment builds your on-chain Trust Score.',
+  icons: {
+    icon: '/icon.svg',
+  },
 }
 
 export default function RootLayout({
