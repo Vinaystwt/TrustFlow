@@ -37,6 +37,7 @@ const TRUSTFLOW_ABI = parseAbi([
 const ERC20_ABI = parseAbi([
   'function approve(address, uint256) returns (bool)',
   'function allowance(address, address) view returns (uint256)',
+  'function balanceOf(address) view returns (uint256)',
 ])
 
 // ---------------------------------------------------------------------------
@@ -145,9 +146,43 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // 5. Balance pre-checks
+    const MIN_GAS_QIE = 50_000_000_000_000_000n // 0.05 QIE
+    const relayerQIE = await publicClient.getBalance({ address: account.address })
+
+    if (relayerQIE < MIN_GAS_QIE) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Relayer wallet low on gas (QIE). Try again later.',
+          fallback: true,
+        },
+        { status: 503 }
+      )
+    }
+
+    if (action === 'fund') {
+      const relayerQUSDC = await publicClient.readContract({
+        address: QUSDC_ADDRESS,
+        abi: ERC20_ABI,
+        functionName: 'balanceOf',
+        args: [account.address],
+      })
+      if (relayerQUSDC < agreement.totalAmount) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Relayer wallet has insufficient QUSDC to fund this agreement.',
+            fallback: true,
+          },
+          { status: 503 }
+        )
+      }
+    }
+
     let txHash: Hash
 
-    // 5. Execute allowed actions
+    // 6. Execute allowed actions
     if (action === 'fund') {
       // Agreement must be in Draft status (0)
       if (agreement.status !== 0) {
