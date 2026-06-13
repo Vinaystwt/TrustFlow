@@ -13,7 +13,7 @@ module.exports = {
   },
   networks: {
     qieTestnet: {
-      url: "https://testnetqierpc1.digital/",
+      url: "https://rpc1testnet.qie.digital/",
       chainId: 1983,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     },
