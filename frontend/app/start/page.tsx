@@ -8,6 +8,7 @@ import {
   Globe,
   Fuel,
   Droplets,
+  Wallet,
   PlayCircle,
   Check,
   ExternalLink,
@@ -16,7 +17,7 @@ import {
 } from 'lucide-react'
 import { PageWrapper } from '@/components/PageWrapper'
 import { AddNetworkButton } from '@/components/AddNetworkButton'
-import { FaucetButton } from '@/components/FaucetButton'
+import { FaucetButton, AddTokenButton } from '@/components/FaucetButton'
 import { useQUSDCBalance } from '@/hooks/useTrustFlow'
 import { cx } from '@/lib/utils'
 
@@ -45,6 +46,12 @@ const STEPS: Step[] = [
     icon: Droplets,
     title: 'Get test QUSDC',
     description: 'Mint test stablecoins to your wallet. These are the tokens used for payments.',
+  },
+  {
+    id: 'token',
+    icon: Wallet,
+    title: 'Add QUSDC to your wallet',
+    description: 'Import the QUSDC token so your balance shows in MetaMask.',
   },
   {
     id: 'demo',
@@ -93,11 +100,11 @@ export default function StartPage() {
             Get Started with TrustFlow
           </h1>
           <p className="mt-2 text-text-secondary">
-            Four steps to your first on-chain payment agreement. Takes about 3 minutes.
+            Five steps to your first on-chain payment agreement. Takes about 3 minutes.
           </p>
           <div className="mt-4 flex justify-center">
             <div className="flex items-center gap-2 rounded-full bg-bg-subtle px-4 py-1.5 text-sm text-text-secondary">
-              <span className="font-mono font-semibold text-brand-primary-light">{completedCount}/4</span>
+              <span className="font-mono font-semibold text-brand-primary-light">{completedCount}/{STEPS.length}</span>
               steps complete
             </div>
           </div>
@@ -170,6 +177,13 @@ export default function StartPage() {
                     {step.id === 'qusdc' && !done && <FaucetButton />}
                     {step.id === 'qusdc' && done && (
                       <p className="text-sm text-success">Test QUSDC in your wallet.</p>
+                    )}
+
+                    {step.id === 'token' && !done && (
+                      <AddTokenButton />
+                    )}
+                    {step.id === 'token' && done && (
+                      <p className="text-sm text-success">QUSDC visible in your wallet.</p>
                     )}
 
                     {step.id === 'demo' && (
