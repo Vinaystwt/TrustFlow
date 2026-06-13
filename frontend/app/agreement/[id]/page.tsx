@@ -370,7 +370,7 @@ export default function AgreementDetailPage() {
                 {enforcedTermsSummary(creatorTier)}
               </p>
               <p className="mt-1 text-xs text-trust-text-dim">
-                These rules are enforced on-chain by TrustFlowV2 based on the freelancer&apos;s trust tier.
+                These rules are enforced on-chain by TrustFlow v1.1 based on the freelancer&apos;s trust tier.
               </p>
             </div>
           </div>
