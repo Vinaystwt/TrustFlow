@@ -12,6 +12,7 @@ import { AddressDisplay } from '@/components/AddressDisplay'
 import { StatusBadge } from '@/components/StatusBadge'
 import { Skeleton } from '@/components/Skeleton'
 import { useToast } from '@/components/Toast'
+import { FaucetButton } from '@/components/FaucetButton'
 import {
   useGetAgreement,
   useGetMilestones,
@@ -194,6 +195,12 @@ export default function FundPage() {
                       {formatQUSDC(balance)}
                     </span>
                   </div>
+                  {!sufficient && (
+                    <div className="mb-3 flex items-center justify-between rounded-xl border border-brand-primary/25 bg-brand-primary/10 px-4 py-3">
+                      <span className="text-xs text-text-secondary">Need test QUSDC?</span>
+                      <FaucetButton compact />
+                    </div>
+                  )}
                   {sufficient ? (
                     <TransactionButton
                       state={

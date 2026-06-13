@@ -348,6 +348,50 @@ export function useClaimMilestone() {
   return { claimMilestone, ...rest }
 }
 
+// ---------------------------------------------------------------------------
+// QUSDC faucet: mint 1,000 test QUSDC to connected wallet
+// ---------------------------------------------------------------------------
+
+export function useMintQUSDC() {
+  const config = useConfig()
+  const { writeContractAsync } = useWriteContract()
+  const [status, setStatus] = useState<WriteStatus>('idle')
+  const [hash, setHash] = useState<Hash>()
+  const [error, setError] = useState<unknown>()
+
+  const reset = useCallback(() => {
+    setStatus('idle')
+    setHash(undefined)
+    setError(undefined)
+  }, [])
+
+  const mint = useCallback(
+    async (to: Address, amount: bigint = 1_000_000_000n): Promise<Hash> => {
+      setStatus('loading')
+      setError(undefined)
+      try {
+        const txHash = await writeContractAsync({
+          abi: ERC20_ABI,
+          address: QUSDC_ADDRESS,
+          functionName: 'mint',
+          args: [to, amount],
+        })
+        setHash(txHash)
+        await waitForTransactionReceipt(config, { hash: txHash })
+        setStatus('success')
+        return txHash
+      } catch (e) {
+        setError(e)
+        setStatus('error')
+        throw e
+      }
+    },
+    [config, writeContractAsync]
+  )
+
+  return { mint, status, hash, error, reset }
+}
+
 // V2: client disputes a completed milestone, cancelling auto-claim eligibility.
 export function useDisputeMilestone() {
   const { run, ...rest } = useTrustFlowWrite()

@@ -22,9 +22,10 @@ import { TierBadge } from '@/components/TierBadge'
 import { StatCard } from '@/components/StatCard'
 import { AgreementCard } from '@/components/AgreementCard'
 import { ActivityFeed } from '@/components/ActivityFeed'
+import { FaucetButton } from '@/components/FaucetButton'
 import { OnboardingModal } from '@/components/OnboardingModal'
 import { SkeletonCard, SkeletonRing, SkeletonStat } from '@/components/Skeleton'
-import { useGetTrustProfile, useGetUserAgreements } from '@/hooks/useTrustFlow'
+import { useGetTrustProfile, useGetUserAgreements, useQUSDCBalance } from '@/hooks/useTrustFlow'
 import { useProtocolEvents } from '@/hooks/useEvents'
 import { TRUSTFLOW_ABI, TRUSTFLOW_ADDRESS } from '@/lib/contracts'
 import {
@@ -50,6 +51,7 @@ export default function DashboardPage() {
 
   const { profile, isLoading: profileLoading } = useGetTrustProfile(address)
   const { ids, isLoading: idsLoading } = useGetUserAgreements(address)
+  const { balance: qusdcBalance } = useQUSDCBalance(address)
   const { events } = useProtocolEvents()
 
   const agreementContracts = useMemo(
@@ -186,6 +188,16 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Faucet prompt when QUSDC balance is low */}
+      {qusdcBalance !== undefined && qusdcBalance < 100_000_000n && (
+        <div className="mt-6 flex items-center justify-between rounded-xl border border-brand-primary/25 bg-brand-primary/10 px-5 py-3">
+          <p className="text-sm text-text-secondary">
+            Your test QUSDC balance is low. Mint some to fund agreements.
+          </p>
+          <FaucetButton compact={false} />
+        </div>
+      )}
 
       {/* Stat cards */}
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">

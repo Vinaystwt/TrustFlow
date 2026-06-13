@@ -4,6 +4,7 @@ import './globals.css'
 import { Providers } from './providers'
 import { ToastProvider } from '@/components/Toast'
 import { Header } from '@/components/Header'
+import { NetworkBannerWrapper } from '@/components/NetworkBannerWrapper'
 import { Footer } from '@/components/Footer'
 
 const spaceGrotesk = Space_Grotesk({
@@ -44,6 +45,7 @@ export default function RootLayout({
           <ToastProvider>
             <div className="accent-line" />
             <Header />
+            <NetworkBannerWrapper />
             <main>{children}</main>
             <Footer />
           </ToastProvider>

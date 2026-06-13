@@ -7,11 +7,13 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Menu, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Logo } from './Logo'
+import { FaucetButton } from './FaucetButton'
 import { cx } from '@/lib/utils'
 
 const NAV = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/create', label: 'Create' },
+  { href: '/demo', label: 'Demo' },
   { href: '/leaderboard', label: 'Leaderboard' },
   { href: '/analytics', label: 'Analytics' },
   { href: '/docs', label: 'Docs' },
@@ -55,6 +57,9 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <div className="hidden lg:block">
+            <FaucetButton compact />
+          </div>
           <div className="hidden sm:block">
             <ConnectButton
               accountStatus="address"

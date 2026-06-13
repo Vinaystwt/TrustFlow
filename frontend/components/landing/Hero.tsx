@@ -61,15 +61,18 @@ export function Hero() {
               </button>
             )}
             <Link
-              href="/docs"
+              href="/demo"
               className="inline-flex items-center gap-2 rounded-xl border border-border-strong px-6 py-3.5 font-display text-base font-semibold text-text transition-colors hover:border-brand-primary/50"
             >
-              View Demo <ArrowRight size={18} />
+              Try Demo <ArrowRight size={18} />
             </Link>
           </div>
 
           <p className="mt-5 text-sm text-text-dim">
-            No fees during beta · Live on QIE testnet · 5 integrated components
+            No fees during beta · Live on QIE testnet ·{' '}
+            <Link href="/start" className="text-brand-primary-light hover:underline">
+              New here? Start guide
+            </Link>
           </p>
         </motion.div>
 
