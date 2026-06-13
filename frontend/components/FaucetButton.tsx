@@ -1,28 +1,36 @@
 'use client'
 
-import { useState } from 'react'
-import { useAccount } from 'wagmi'
-import { Droplets, Loader2, Check } from 'lucide-react'
+import { useCallback, useState } from 'react'
+import { useAccount, useWalletClient } from 'wagmi'
+import { Droplets, Loader2, Check, Copy } from 'lucide-react'
 import { useMintQUSDC, useQUSDCBalance } from '@/hooks/useTrustFlow'
 import { useToast } from '@/components/Toast'
 import { explorerTx } from '@/lib/chains'
 import { formatQUSDC, friendlyError, cx } from '@/lib/utils'
 import { QUSDC_ADDRESS } from '@/lib/contracts'
 
-/** Prompt MetaMask to add QUSDC as a watched ERC-20 token. */
-export async function addQUSDCToWallet(): Promise<boolean> {
-  if (typeof window === 'undefined' || !window.ethereum) return false
+const WATCH_ASSET_PARAMS = {
+  type: 'ERC20' as const,
+  options: {
+    address: QUSDC_ADDRESS,
+    symbol: 'QUSDC',
+    decimals: 6,
+  },
+}
+
+/**
+ * Request the connected wallet to add QUSDC as a watched token.
+ * Uses the wagmi wallet client (EIP-6963 aware) so it targets
+ * whichever wallet the user actually connected with.
+ */
+async function requestWatchAsset(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  walletClient: any
+): Promise<boolean> {
   try {
-    const result = await window.ethereum.request({
+    const result = await walletClient.request({
       method: 'wallet_watchAsset',
-      params: {
-        type: 'ERC20',
-        options: {
-          address: QUSDC_ADDRESS,
-          symbol: 'QUSDC',
-          decimals: 6,
-        },
-      },
+      params: WATCH_ASSET_PARAMS,
     })
     return !!result
   } catch {
@@ -30,14 +38,46 @@ export async function addQUSDCToWallet(): Promise<boolean> {
   }
 }
 
+/** Fallback: try raw window.ethereum if walletClient unavailable */
+async function requestWatchAssetFallback(): Promise<boolean> {
+  if (typeof window === 'undefined' || !window.ethereum) return false
+  try {
+    const result = await window.ethereum.request({
+      method: 'wallet_watchAsset',
+      params: WATCH_ASSET_PARAMS,
+    })
+    return !!result
+  } catch {
+    return false
+  }
+}
+
+function copyAddress() {
+  navigator.clipboard?.writeText(QUSDC_ADDRESS).catch(() => {})
+}
+
+// ---------------------------------------------------------------------------
+// AddTokenButton: standalone button for importing QUSDC into wallet
+// ---------------------------------------------------------------------------
+
 export function AddTokenButton({ className }: { className?: string }) {
+  const { data: walletClient } = useWalletClient()
+  const { toast } = useToast()
   const [done, setDone] = useState(false)
 
   const handle = async () => {
-    const ok = await addQUSDCToWallet()
+    const ok = walletClient
+      ? await requestWatchAsset(walletClient)
+      : await requestWatchAssetFallback()
+
     if (ok) {
       setDone(true)
       setTimeout(() => setDone(false), 3000)
+    } else {
+      toast({
+        type: 'info',
+        message: `Could not auto-add token. Add manually: ${QUSDC_ADDRESS.slice(0, 6)}...${QUSDC_ADDRESS.slice(-4)} (QUSDC, 6 decimals)`,
+      })
     }
   }
 
@@ -58,6 +98,10 @@ export function AddTokenButton({ className }: { className?: string }) {
   )
 }
 
+// ---------------------------------------------------------------------------
+// FaucetButton: mint QUSDC then prompt token import
+// ---------------------------------------------------------------------------
+
 export function FaucetButton({
   className,
   compact = false,
@@ -66,6 +110,7 @@ export function FaucetButton({
   compact?: boolean
 }) {
   const { address } = useAccount()
+  const { data: walletClient } = useWalletClient()
   const { balance, refetch } = useQUSDCBalance(address)
   const { mint, status } = useMintQUSDC()
   const { toast } = useToast()
@@ -73,7 +118,7 @@ export function FaucetButton({
 
   const loading = status === 'loading'
 
-  const handleMint = async () => {
+  const handleMint = useCallback(async () => {
     if (!address || loading) return
     try {
       const hash = await mint(address)
@@ -84,13 +129,27 @@ export function FaucetButton({
       })
       setJustMinted(true)
       refetch()
-      // Prompt user to add QUSDC to their wallet after minting
-      addQUSDCToWallet()
+
+      // Small delay so MetaMask's tx-confirmed notification clears first
+      await new Promise((r) => setTimeout(r, 1200))
+
+      // Prompt wallet to import QUSDC token
+      const ok = walletClient
+        ? await requestWatchAsset(walletClient)
+        : await requestWatchAssetFallback()
+
+      if (!ok) {
+        toast({
+          type: 'info',
+          message: `Auto-import failed. Add QUSDC manually: ${QUSDC_ADDRESS.slice(0, 6)}...${QUSDC_ADDRESS.slice(-4)}`,
+        })
+      }
+
       setTimeout(() => setJustMinted(false), 3000)
     } catch (e) {
       toast({ type: 'error', message: friendlyError(e) })
     }
-  }
+  }, [address, loading, mint, toast, refetch, walletClient])
 
   if (!address) return null
 
