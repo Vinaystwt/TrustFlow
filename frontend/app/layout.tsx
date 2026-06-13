@@ -30,7 +30,10 @@ export const metadata: Metadata = {
   description:
     'Create milestone payment agreements on QIE Blockchain. Every completed payment builds your on-chain Trust Score.',
   icons: {
-    icon: '/icon.svg',
+    icon: [
+      { url: '/favicon.ico', sizes: '16x16', type: 'image/x-icon' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
   },
 }
 
