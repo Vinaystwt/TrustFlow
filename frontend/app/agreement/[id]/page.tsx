@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Wallet,
   ArrowLeft,
+  ShieldCheck,
 } from 'lucide-react'
 import { PageWrapper } from '@/components/PageWrapper'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -32,12 +33,16 @@ import {
   useApproveMilestone,
   useCompleteMilestone,
   useCancelAgreement,
+  useClaimMilestone,
+  useDisputeMilestone,
+  useGetEnforcedTerms,
 } from '@/hooks/useTrustFlow'
 import { explorerTx } from '@/lib/chains'
 import {
   formatQUSDC,
   formatDate,
   friendlyError,
+  enforcedTermsSummary,
   type Milestone,
 } from '@/lib/utils'
 
@@ -59,6 +64,8 @@ export default function AgreementDetailPage() {
   const client = agreement?.client
   const { profile: creatorProfile } = useGetTrustProfile(creator)
   const { profile: clientProfile } = useGetTrustProfile(client)
+  const { terms: creatorTerms } = useGetEnforcedTerms(creator)
+  const creatorTier = creatorTerms?.tier ?? Number(creatorProfile?.tier ?? 0)
 
   const { events } = useProtocolEvents()
   const agreementEvents = idValid
@@ -72,6 +79,8 @@ export default function AgreementDetailPage() {
   const approveHook = useApproveMilestone()
   const completeHook = useCompleteMilestone()
   const cancelHook = useCancelAgreement()
+  const claimHook = useClaimMilestone()
+  const disputeHook = useDisputeMilestone()
 
   const [busyIndex, setBusyIndex] = useState<number | null>(null)
 
@@ -154,6 +163,44 @@ export default function AgreementDetailPage() {
     }
   }
 
+  // --- Claim (Tier 3 auto-claim) ---
+  const onClaim = async (index: number) => {
+    if (!agreement) return
+    setBusyIndex(index)
+    try {
+      const hash = await claimHook.claimMilestone(agreement.id, index)
+      toast({
+        type: 'success',
+        message: 'Payment auto-claimed. Funds released to you!',
+        href: explorerTx(hash),
+      })
+      refetchAll()
+    } catch (e) {
+      toast({ type: 'error', message: friendlyError(e) })
+    } finally {
+      setBusyIndex(null)
+    }
+  }
+
+  // --- Dispute (client) ---
+  const onDispute = async (index: number) => {
+    if (!agreement) return
+    setBusyIndex(index)
+    try {
+      const hash = await disputeHook.disputeMilestone(agreement.id, index)
+      toast({
+        type: 'info',
+        message: 'Milestone disputed. Auto-claim is now blocked.',
+        href: explorerTx(hash),
+      })
+      refetchAll()
+    } catch (e) {
+      toast({ type: 'error', message: friendlyError(e) })
+    } finally {
+      setBusyIndex(null)
+    }
+  }
+
   // --- Cancel ---
   const onCancel = async () => {
     if (!agreement) return
@@ -195,7 +242,7 @@ export default function AgreementDetailPage() {
 
   const loading = aLoading || mLoading
   const ms: Milestone[] = milestones ?? []
-  const approvedMs = ms.filter((m) => m.status === 3)
+  const approvedMs = ms.filter((m) => m.status === 3 || m.status === 5)
 
   const txStateFor = (hookStatus: string) =>
     hookStatus === 'loading' ? 'loading' : 'idle'
@@ -310,6 +357,24 @@ export default function AgreementDetailPage() {
             </div>
           </div>
 
+          {/* Enforced terms (real on-chain rules from the creator's tier) */}
+          <div className="card mt-6 flex items-start gap-3 p-5">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-primary/15 text-brand-primary-light">
+              <ShieldCheck size={18} />
+            </span>
+            <div>
+              <p className="font-display text-sm font-semibold text-trust-text">
+                Enforced terms{creatorTerms ? ` · ${creatorTerms.tierName} tier` : ''}
+              </p>
+              <p className="mt-0.5 text-sm text-trust-text-secondary">
+                {enforcedTermsSummary(creatorTier)}
+              </p>
+              <p className="mt-1 text-xs text-trust-text-dim">
+                These rules are enforced on-chain by TrustFlowV2 based on the freelancer&apos;s trust tier.
+              </p>
+            </div>
+          </div>
+
           {/* Milestone timeline */}
           <div className="card mt-6 p-6">
             <h2 className="mb-5 font-display text-lg font-semibold tracking-display-md text-trust-text">
@@ -319,14 +384,19 @@ export default function AgreementDetailPage() {
               milestones={ms}
               role={role}
               busyIndex={busyIndex}
+              creatorTier={creatorTier}
               txState={
                 approveHook.status === 'loading' ||
-                completeHook.status === 'loading'
+                completeHook.status === 'loading' ||
+                claimHook.status === 'loading' ||
+                disputeHook.status === 'loading'
                   ? 'loading'
                   : 'idle'
               }
               onApprove={onApprove}
               onComplete={onComplete}
+              onClaim={onClaim}
+              onDispute={onDispute}
             />
           </div>
 

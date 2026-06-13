@@ -11,6 +11,9 @@ import {
   BadgeCheck,
   Banknote,
   Activity,
+  Zap,
+  HandCoins,
+  AlertTriangle,
 } from 'lucide-react'
 import type { ProtocolEvent } from '@/hooks/useEvents'
 import { explorerTx } from '@/lib/chains'
@@ -50,6 +53,27 @@ function render(e: ProtocolEvent): Rendered {
         icon: CheckCircle2,
         color: '#10B981',
         text: `Milestone approved on #${id} (${formatQUSDC(a.amount as bigint)})`,
+        href: agHref,
+      }
+    case 'UpfrontReleased':
+      return {
+        icon: Zap,
+        color: '#F59E0B',
+        text: `Trusted-tier upfront of ${formatQUSDC(a.amount as bigint)} released on #${id}`,
+        href: agHref,
+      }
+    case 'MilestoneClaimed':
+      return {
+        icon: HandCoins,
+        color: '#22C55E',
+        text: `Elite creator auto-claimed ${formatQUSDC(a.amount as bigint)} on #${id}`,
+        href: agHref,
+      }
+    case 'MilestoneDisputed':
+      return {
+        icon: AlertTriangle,
+        color: '#EF4444',
+        text: `Milestone disputed on #${id}`,
         href: agHref,
       }
     case 'PaymentReleased':

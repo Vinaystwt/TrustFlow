@@ -5,14 +5,21 @@ import { useRouter } from 'next/navigation'
 import { useAccount } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Plus, Trash2, Info, ArrowRight, ArrowLeft, Check } from 'lucide-react'
+import { Plus, Trash2, Info, ArrowRight, ArrowLeft, Check, ShieldCheck } from 'lucide-react'
 import type { Address } from 'viem'
 import { PageWrapper } from '@/components/PageWrapper'
 import { TransactionButton } from '@/components/TransactionButton'
 import { Avatar } from '@/components/Avatar'
 import { useToast } from '@/components/Toast'
-import { useCreateAgreement } from '@/hooks/useTrustFlow'
-import { isValidAddress, parseQUSDC, friendlyError, truncateAddress, cx } from '@/lib/utils'
+import { useCreateAgreement, useGetEnforcedTerms } from '@/hooks/useTrustFlow'
+import {
+  isValidAddress,
+  parseQUSDC,
+  friendlyError,
+  truncateAddress,
+  enforcedTermsSummary,
+  cx,
+} from '@/lib/utils'
 
 interface MilestoneRow {
   name: string
@@ -27,6 +34,8 @@ export default function CreatePage() {
   const { openConnectModal } = useConnectModal()
   const { toast } = useToast()
   const { create, status } = useCreateAgreement()
+  const { terms: myTerms } = useGetEnforcedTerms(address)
+  const myTier = myTerms?.tier ?? 0
 
   const [step, setStep] = useState(0)
   const [title, setTitle] = useState('')
@@ -216,6 +225,16 @@ export default function CreatePage() {
                         <span className="font-mono text-text">{(parseFloat(m.amount) || 0).toFixed(2)} QUSDC</span>
                       </div>
                     ))}
+                  </div>
+                  <div className="rounded-xl border border-brand-primary/25 bg-brand-primary/10 p-4">
+                    <p className="flex items-center gap-1.5 font-display text-sm font-semibold text-brand-primary-light">
+                      <ShieldCheck size={15} /> Your enforced terms
+                      {myTerms ? ` · ${myTerms.tierName} (Tier ${myTier})` : ''}
+                    </p>
+                    <p className="mt-1 text-xs text-text-secondary">
+                      Based on your current trust tier, agreements your client funds will use these on-chain rules:
+                    </p>
+                    <p className="mt-1.5 text-xs text-text">{enforcedTermsSummary(myTier)}</p>
                   </div>
                   <div className="flex items-center gap-2 rounded-lg bg-success/10 px-3 py-2 text-xs text-success">
                     <Info size={14} /> +100 Trust points on completion

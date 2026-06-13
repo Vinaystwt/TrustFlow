@@ -15,7 +15,7 @@ import {
   ERC20_ABI,
   QUSDC_ADDRESS,
 } from '@/lib/contracts'
-import type { Agreement, Milestone, TrustProfile } from '@/lib/utils'
+import type { Agreement, Milestone, TrustProfile, EnforcedTerms } from '@/lib/utils'
 
 const READ_OPTS = { staleTime: 10_000 }
 
@@ -65,6 +65,31 @@ export function useGetTrustProfile(userAddress?: Address) {
     query: { enabled: !!userAddress, ...READ_OPTS },
   } as UseReadContractParameters)
   return { ...q, profile: q.data as TrustProfile | undefined }
+}
+
+export function useGetEnforcedTerms(userAddress?: Address) {
+  const q = useReadContract({
+    abi: TRUSTFLOW_ABI,
+    address: TRUSTFLOW_ADDRESS,
+    functionName: 'getEnforcedTerms',
+    args: userAddress ? [userAddress] : undefined,
+    query: { enabled: !!userAddress, ...READ_OPTS },
+  } as UseReadContractParameters)
+
+  const raw = q.data as
+    | readonly [number, string, bigint, boolean, bigint]
+    | undefined
+  const terms: EnforcedTerms | undefined = raw
+    ? {
+        tier: Number(raw[0]),
+        tierName: raw[1],
+        upfrontBps: raw[2],
+        hasAutoClaim: raw[3],
+        claimWindowHours: raw[4],
+      }
+    : undefined
+
+  return { ...q, terms }
 }
 
 // ---------------------------------------------------------------------------
@@ -310,4 +335,26 @@ export function useCancelAgreement() {
     [run]
   )
   return { cancelAgreement, ...rest }
+}
+
+// V2: Tier 3 creator auto-claim after the dispute window elapses.
+export function useClaimMilestone() {
+  const { run, ...rest } = useTrustFlowWrite()
+  const claimMilestone = useCallback(
+    (agreementId: bigint, index: number) =>
+      run('claimMilestone', [agreementId, BigInt(index)]),
+    [run]
+  )
+  return { claimMilestone, ...rest }
+}
+
+// V2: client disputes a completed milestone, cancelling auto-claim eligibility.
+export function useDisputeMilestone() {
+  const { run, ...rest } = useTrustFlowWrite()
+  const disputeMilestone = useCallback(
+    (agreementId: bigint, index: number) =>
+      run('disputeMilestone', [agreementId, BigInt(index)]),
+    [run]
+  )
+  return { disputeMilestone, ...rest }
 }

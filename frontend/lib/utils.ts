@@ -6,7 +6,8 @@ import { QUSDC_DECIMALS } from './contracts'
 // ---------------------------------------------------------------------------
 
 export type AgreementStatus = 0 | 1 | 2 | 3 // Draft | Active | Completed | Cancelled
-export type MilestoneStatus = 0 | 1 | 2 | 3 | 4 // Pending | Funded | Completed | Approved | Disputed
+// Pending | Funded | Completed | Approved | Disputed | Claimed
+export type MilestoneStatus = 0 | 1 | 2 | 3 | 4 | 5
 
 export interface Agreement {
   id: bigint
@@ -30,6 +31,17 @@ export interface Milestone {
   proofURI: string
   completedAt: bigint
   approvedAt: bigint
+  upfrontReleased: bigint
+  claimableAfter: bigint
+}
+
+// On-chain enforced terms (TrustFlowV2.getEnforcedTerms)
+export interface EnforcedTerms {
+  tier: number
+  tierName: string
+  upfrontBps: bigint
+  hasAutoClaim: boolean
+  claimWindowHours: bigint
 }
 
 export interface TrustProfile {
@@ -97,6 +109,7 @@ export const MILESTONE_STATUS_LABEL: Record<MilestoneStatus, string> = {
   2: 'Completed',
   3: 'Approved',
   4: 'Disputed',
+  5: 'Claimed',
 }
 
 // ---------------------------------------------------------------------------
@@ -112,14 +125,42 @@ export interface Tier {
 }
 
 export const TIERS: Tier[] = [
-  { id: 0, name: 'Newcomer', color: '#64748B', range: '0-199', benefits: 'Escrow-only' },
-  { id: 1, name: 'Verified', color: '#3B82F6', range: '200-499', benefits: 'Standard terms, 48h dispute' },
-  { id: 2, name: 'Trusted', color: '#10B981', range: '500-799', benefits: '24h dispute, priority' },
-  { id: 3, name: 'Elite', color: '#F59E0B', range: '800-1000', benefits: 'Instant settlement, advances' },
+  { id: 0, name: 'Newcomer', color: '#64748B', range: '0-199', benefits: 'Full escrow. Funds locked until each milestone approved.' },
+  { id: 1, name: 'Verified', color: '#3B82F6', range: '200-499', benefits: 'Full escrow with 48h auto-refund if creator never delivers.' },
+  { id: 2, name: 'Trusted', color: '#10B981', range: '500-799', benefits: '25% of each milestone released upfront on funding.' },
+  { id: 3, name: 'Elite', color: '#F59E0B', range: '800-1000', benefits: 'Auto-claim: get paid 24h after delivery if client stays silent.' },
 ]
 
 export function tierInfo(tier: number): Tier {
   return TIERS[Math.min(Math.max(tier, 0), 3)]
+}
+
+/** Short, plain-language description of the on-chain terms a creator tier enforces. */
+export function enforcedTermsSummary(tier: number): string {
+  switch (Math.min(Math.max(tier, 0), 3)) {
+    case 2:
+      return 'Trusted tier: 25% of each milestone releases to the creator upfront on funding, 75% on approval.'
+    case 3:
+      return 'Elite tier: auto-claim available 24h after delivery if the client does not approve or dispute.'
+    case 1:
+      return 'Verified tier: full escrow protection with a 48h dispute window.'
+    default:
+      return 'Full escrow protection. Funds release to the creator on milestone approval.'
+  }
+}
+
+export const TIER2_UPFRONT_BPS = 2500
+export const TIER3_CLAIM_WINDOW_SECONDS = 24 * 60 * 60
+
+/** Formats a remaining-seconds countdown like "18h 32m" or "00m 45s". */
+export function formatCountdown(secondsLeft: number): string {
+  if (secondsLeft <= 0) return 'now'
+  const h = Math.floor(secondsLeft / 3600)
+  const m = Math.floor((secondsLeft % 3600) / 60)
+  const s = Math.floor(secondsLeft % 60)
+  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`
+  if (m > 0) return `${m}m ${String(s).padStart(2, '0')}s`
+  return `${s}s`
 }
 
 const TIER_THRESHOLDS = [200, 500, 800, 1001]
@@ -159,6 +200,9 @@ const ERROR_MAP: { match: string; message: string }[] = [
   { match: 'agreement is not draft', message: 'This agreement is no longer a draft' },
   { match: 'milestone is not funded', message: "This milestone hasn't been funded yet" },
   { match: 'milestone is not completed', message: "Freelancer hasn't marked this complete yet" },
+  { match: 'milestone not completed', message: "Freelancer hasn't marked this complete yet" },
+  { match: 'not eligible for auto-claim', message: 'Auto-claim only applies to Elite tier milestones' },
+  { match: 'claim window not elapsed', message: 'The 24h auto-claim window has not elapsed yet' },
   { match: 'client cannot be creator', message: 'Client and freelancer must be different addresses' },
   { match: 'invalid milestone count', message: 'You need between 1 and 10 milestones' },
   { match: 'transfer amount exceeds balance', message: 'Insufficient QUSDC balance' },

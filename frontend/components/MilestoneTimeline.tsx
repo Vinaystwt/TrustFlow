@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Circle,
@@ -9,12 +9,15 @@ import {
   CheckCircle2,
   AlertTriangle,
   ExternalLink,
+  HandCoins,
+  Zap,
   X,
 } from 'lucide-react'
 import { TransactionButton, type TxState } from './TransactionButton'
 import {
   formatQUSDC,
   formatDate,
+  formatCountdown,
   type Milestone,
   type MilestoneStatus,
 } from '@/lib/utils'
@@ -30,6 +33,7 @@ const NODE: Record<
   2: { color: '#F59E0B', icon: FileCheck2, label: 'Awaiting approval' },
   3: { color: '#10B981', icon: CheckCircle2, label: 'Paid' },
   4: { color: '#EF4444', icon: AlertTriangle, label: 'Disputed' },
+  5: { color: '#22C55E', icon: HandCoins, label: 'Auto-claimed' },
 }
 
 export function MilestoneTimeline({
@@ -37,18 +41,31 @@ export function MilestoneTimeline({
   role,
   busyIndex,
   txState,
+  creatorTier = 0,
   onApprove,
   onComplete,
+  onClaim,
+  onDispute,
 }: {
   milestones: Milestone[]
   role: Role
   busyIndex: number | null
   txState: TxState
+  creatorTier?: number
   onApprove: (index: number) => void
   onComplete: (index: number, proofURI: string) => void
+  onClaim?: (index: number) => void
+  onDispute?: (index: number) => void
 }) {
   const [modalIndex, setModalIndex] = useState<number | null>(null)
   const [proof, setProof] = useState('')
+
+  // Live clock so countdowns and claim eligibility update without a refetch.
+  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000))
+  useEffect(() => {
+    const t = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 1000)
+    return () => clearInterval(t)
+  }, [])
 
   const submitProof = () => {
     if (modalIndex === null) return
@@ -64,11 +81,21 @@ export function MilestoneTimeline({
           const meta = NODE[m.status]
           const Icon = meta.icon
           const isLast = i === milestones.length - 1
-          const justApproved = m.status === 3
+          const justSettled = m.status === 3 || m.status === 5
           const busy = busyIndex === i
 
           const canComplete = role === 'freelancer' && m.status === 1
           const canApprove = role === 'client' && m.status === 2
+
+          // Tier 3 auto-claim eligibility.
+          const claimAt = Number(m.claimableAfter)
+          const hasClaimWindow = m.status === 2 && claimAt > 0
+          const windowElapsed = hasClaimWindow && now >= claimAt
+          const secondsLeft = hasClaimWindow ? claimAt - now : 0
+          const canClaim = role === 'freelancer' && windowElapsed && !!onClaim
+          const canDispute = role === 'client' && m.status === 2 && !!onDispute
+
+          const upfront = m.upfrontReleased ?? 0n
 
           return (
             <li key={i} className="relative flex gap-4 pb-6">
@@ -80,7 +107,7 @@ export function MilestoneTimeline({
               )}
 
               <div className="relative shrink-0">
-                {justApproved && (
+                {justSettled && (
                   <motion.span
                     className="absolute inset-0 rounded-full"
                     style={{ border: `2px solid ${meta.color}` }}
@@ -111,7 +138,7 @@ export function MilestoneTimeline({
                       style={{ color: meta.color }}
                     >
                       {meta.label}
-                      {m.status === 3 && m.approvedAt > 0n && (
+                      {(m.status === 3 || m.status === 5) && m.approvedAt > 0n && (
                         <span className="text-trust-text-dim">
                           {' '}
                           · {formatDate(m.approvedAt)}
@@ -124,19 +151,36 @@ export function MilestoneTimeline({
                   </span>
                 </div>
 
+                {upfront > 0n && (
+                  <p className="mt-1 inline-flex items-center gap-1 text-xs text-trust-warning">
+                    <Zap size={12} /> {formatQUSDC(upfront)} released upfront (Trusted tier)
+                  </p>
+                )}
+
                 {m.proofURI && (
                   <a
                     href={m.proofURI}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-1.5 inline-flex items-center gap-1 font-mono text-xs text-trust-accent hover:underline"
+                    className="mt-1.5 flex w-fit items-center gap-1 font-mono text-xs text-trust-accent hover:underline"
                   >
                     <ExternalLink size={12} /> View deliverable
                   </a>
                 )}
 
-                {(canComplete || canApprove) && (
-                  <div className="mt-3">
+                {hasClaimWindow && !windowElapsed && (
+                  <p className="mt-1.5 inline-flex items-center gap-1 font-mono text-xs text-trust-text-dim">
+                    <Clock size={12} /> Auto-claim available in {formatCountdown(secondsLeft)}
+                  </p>
+                )}
+                {hasClaimWindow && windowElapsed && role !== 'freelancer' && (
+                  <p className="mt-1.5 inline-flex items-center gap-1 font-mono text-xs text-trust-warning">
+                    <Zap size={12} /> Auto-claim window elapsed
+                  </p>
+                )}
+
+                {(canComplete || canApprove || canClaim || canDispute) && (
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {canComplete && (
                       <TransactionButton
                         variant="primary"
@@ -160,6 +204,28 @@ export function MilestoneTimeline({
                         className="!px-4 !py-2 text-xs"
                       >
                         Approve &amp; Release
+                      </TransactionButton>
+                    )}
+                    {canClaim && (
+                      <TransactionButton
+                        variant="primary"
+                        state={busy ? txState : 'idle'}
+                        loadingLabel="Claiming…"
+                        onClick={() => onClaim!(i)}
+                        className="!px-4 !py-2 text-xs"
+                      >
+                        Claim Payment
+                      </TransactionButton>
+                    )}
+                    {canDispute && (
+                      <TransactionButton
+                        variant="ghost"
+                        state={busy ? txState : 'idle'}
+                        loadingLabel="Disputing…"
+                        onClick={() => onDispute!(i)}
+                        className="!px-4 !py-2 text-xs"
+                      >
+                        Dispute
                       </TransactionButton>
                     )}
                   </div>
