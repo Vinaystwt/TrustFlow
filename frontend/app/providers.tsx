@@ -1,40 +1,33 @@
 'use client'
 
 import { ReactNode, useState } from 'react'
-import { WagmiProvider, createConfig, http } from 'wagmi'
+import { WagmiProvider, http } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   RainbowKitProvider,
   darkTheme,
-  connectorsForWallets,
+  getDefaultConfig,
 } from '@rainbow-me/rainbowkit'
-import {
-  injectedWallet,
-  metaMaskWallet,
-  walletConnectWallet,
-} from '@rainbow-me/rainbowkit/wallets'
 import '@rainbow-me/rainbowkit/styles.css'
 import { qieTestnet } from '@/lib/chains'
 
-const projectId =
-  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'placeholder_project_id'
+// ---------------------------------------------------------------------------
+// getDefaultConfig sets up wagmi with:
+//   - EIP-6963 multi-injected-provider discovery (each installed wallet gets
+//     its own named entry: MetaMask, Rabby, Brave, etc.)
+//   - WalletConnect v2 fallback for mobile / remote wallets
+//   - Coinbase Wallet SDK
+//   - Safe connector
+// This replaces the manual connectorsForWallets setup that used the MetaMask
+// SDK connector, which hung instead of popping up the extension.
+// ---------------------------------------------------------------------------
 
-const connectors = connectorsForWallets(
-  [
-    {
-      groupName: 'Recommended',
-      wallets: [injectedWallet, metaMaskWallet, walletConnectWallet],
-    },
-  ],
-  {
-    appName: 'TrustFlow',
-    projectId,
-  }
-)
-
-const wagmiConfig = createConfig({
+const wagmiConfig = getDefaultConfig({
+  appName: 'TrustFlow',
+  projectId:
+    process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ||
+    '5233990d7a53451d12de1cdb03910795',
   chains: [qieTestnet],
-  connectors,
   transports: {
     [qieTestnet.id]: http('https://rpc1testnet.qie.digital/'),
   },
