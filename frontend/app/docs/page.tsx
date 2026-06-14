@@ -25,6 +25,8 @@ import {
   Fuel,
   PlayCircle,
   ArrowRight,
+  CalendarDays,
+  Check,
 } from 'lucide-react'
 import { DocsNav, type DocSection } from '@/components/DocsNav'
 import { Accordion } from '@/components/Accordion'
@@ -48,6 +50,7 @@ const SECTIONS: DocSection[] = [
   { id: 'architecture', label: 'Architecture' },
   { id: 'qie-integration', label: 'QIE integration' },
   { id: 'contracts', label: 'Smart contracts' },
+  { id: 'roadmap', label: 'Roadmap' },
   { id: 'about', label: 'About' },
   { id: 'faq', label: 'FAQ' },
 ]
@@ -61,6 +64,7 @@ const SEARCH_INDEX: Record<string, string> = {
   architecture: 'architecture frontend nextjs wagmi contracts qie ecosystem wallet domains qiedex agreement lifecycle layers',
   'qie-integration': 'qie integration wallet qusdc stablecoin pass identity domains qiedex token swap funding bonus',
   contracts: 'smart contracts address trustflow mockqusdc explorer key functions createagreement fundagreement completemilestone approvemilestone canceland gettrustprofile openzeppelin reentrancyguard safeerc20 solidity typescript',
+  roadmap: 'roadmap plan timeline q3 q4 q1 q2 2026 2027 production mainnet audit lending streaming sdk api governance fiat enterprise cross-chain future shipped quarter',
   about: 'about built by vinay qie blockchain hackathon github twitter',
   faq: 'faq trust score payments secured dispute identity private fees platform',
 }
@@ -147,6 +151,83 @@ const FAQ = [
     question: 'What fees does TrustFlow charge?',
     answer:
       'TrustFlow charges a 0.5% platform fee on each released milestone payment. The freelancer receives the milestone amount minus this fee.',
+  },
+]
+
+const ROADMAP_SHIPPED = [
+  'Milestone-based payment agreements with on-chain escrow',
+  'On-chain trust scoring with four enforced tiers',
+  'Tier 2: 25% upfront release for Trusted creators',
+  'Tier 3: 24h auto-claim for Elite creators',
+  'Dispute resolution flow',
+  'Full integration with five QIE components (Wallet, QUSDC, Pass, Domains, DEX)',
+  'Solo demo mode with server-side relayer',
+  'In-app faucet, one-click network add, token import',
+  'Leaderboard and protocol analytics',
+  'Live on QIE Testnet',
+]
+
+const ROADMAP_QUARTERS = [
+  {
+    quarter: 'Q3 2026',
+    period: 'July to September',
+    theme: 'Production Readiness',
+    color: '#3B82F6',
+    items: [
+      'Professional smart contract security audit',
+      'Mainnet deployment to QIE with real QUSDC',
+      'Gas optimization pass on all contract functions',
+      'Full live QIE Pass SDK integration (replacing mock proxy)',
+      'Real QIE Domains resolution (name.qie to on-chain addresses)',
+      'Comprehensive end-to-end test suite and CI pipeline',
+      'Bug bounty program launch',
+      'Wallet support expansion (hardware wallets, mobile wallets)',
+    ],
+  },
+  {
+    quarter: 'Q4 2026',
+    period: 'October to December',
+    theme: 'Protocol Depth',
+    color: '#8B5CF6',
+    items: [
+      'Under-collateralized lending: Elite-tier users borrow against future milestones',
+      'Streaming payments: per-second QUSDC flows for retainers and subscriptions',
+      'Multi-party agreements: split payments across multiple contributors',
+      'Reputation-weighted dispute arbitration with staked arbitrators',
+      'Trust score decay and recovery mechanics',
+      'Cross-agreement credit lines based on aggregate trust',
+      'Analytics v2: cohort analysis, trust score trends, protocol health',
+    ],
+  },
+  {
+    quarter: 'Q1 2027',
+    period: 'January to March',
+    theme: 'Ecosystem Expansion',
+    color: '#06B6D4',
+    items: [
+      'Public SDK and API for reading and writing trust scores',
+      'Embeddable TrustFlow widget for third-party marketplaces',
+      'Composable reputation: other protocols use TrustFlow scores in their logic',
+      'Partner integrations with QIE ecosystem projects',
+      'Webhook system for payment and milestone events',
+      'Mobile-first progressive web app',
+      'Multi-language support (starting with major Indian and Southeast Asian languages)',
+    ],
+  },
+  {
+    quarter: 'Q2 2027',
+    period: 'April to June',
+    theme: 'Scale and Sustainability',
+    color: '#F59E0B',
+    items: [
+      'Cross-chain trust portability via bridges',
+      'Fiat on-ramp and off-ramp partnerships for freelancer cash-out',
+      'DAO governance for protocol parameters (fees, tiers, dispute rules)',
+      'Protocol revenue sharing and treasury management',
+      'Enterprise tier for agencies managing many contractors',
+      'AI-assisted agreement drafting and milestone suggestions',
+      'Insurance pool for dispute coverage',
+    ],
   },
 ]
 
@@ -635,6 +716,96 @@ export default function DocsPage() {
               <div className="mt-4 flex items-start gap-2 rounded-xl bg-success/10 px-4 py-3 text-sm text-success">
                 <ShieldCheck size={16} className="mt-0.5 shrink-0" />
                 Secured with OpenZeppelin, ReentrancyGuard, SafeERC20
+              </div>
+            </DocSectionBlock>
+
+            {/* Roadmap */}
+            <DocSectionBlock id="roadmap" hidden={isHidden('roadmap')}>
+              <SectionHeading>Roadmap</SectionHeading>
+              <p className="mt-4 text-lg leading-relaxed text-text-secondary">
+                TrustFlow is built to last. Here is where it goes from here.
+              </p>
+
+              {/* Shipped section */}
+              <div className="mt-8">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-success/20">
+                    <Check size={16} className="text-success" />
+                  </span>
+                  <div>
+                    <h3 className="font-display text-base font-bold text-success">
+                      Shipped
+                    </h3>
+                    <p className="text-xs text-text-dim">Hackathon Build</p>
+                  </div>
+                </div>
+                <div className="ml-4 mt-3 border-l-2 border-success/30 pl-7">
+                  <ul className="space-y-1.5">
+                    {ROADMAP_SHIPPED.map((item) => (
+                      <li
+                        key={item}
+                        className="flex items-start gap-2 text-sm text-text-dim"
+                      >
+                        <Check
+                          size={14}
+                          className="mt-0.5 shrink-0 text-success/60"
+                        />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Future quarters */}
+              <div className="mt-6 space-y-6">
+                {ROADMAP_QUARTERS.map((q) => (
+                  <motion.div
+                    key={q.quarter}
+                    variants={fadeUp}
+                    initial="initial"
+                    whileInView="whileInView"
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="flex h-8 w-8 items-center justify-center rounded-full"
+                        style={{ backgroundColor: `${q.color}20` }}
+                      >
+                        <CalendarDays size={16} style={{ color: q.color }} />
+                      </span>
+                      <div>
+                        <h3
+                          className="font-display text-base font-bold"
+                          style={{ color: q.color }}
+                        >
+                          {q.quarter}: {q.theme}
+                        </h3>
+                        <p className="text-xs text-text-dim">{q.period}</p>
+                      </div>
+                    </div>
+                    <div
+                      className="ml-4 mt-3 border-l-2 pl-7"
+                      style={{ borderColor: `${q.color}40` }}
+                    >
+                      <ul className="space-y-1.5">
+                        {q.items.map((item) => (
+                          <li
+                            key={item}
+                            className="flex items-start gap-2 text-sm text-text-secondary"
+                          >
+                            <span
+                              className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
+                              style={{ backgroundColor: q.color }}
+                            />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             </DocSectionBlock>
 

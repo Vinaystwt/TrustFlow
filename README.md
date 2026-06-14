@@ -198,6 +198,17 @@ npm run dev                  # http://localhost:3000
 - **On-chain event indexing** for leaderboard and analytics. Contract events are read client-side and aggregated for protocol stats.
 - **Framer Motion** for page transitions, staggered card reveals, and micro-interactions. No bounce or elastic easing.
 
+## Roadmap
+
+TrustFlow is built to last. The full roadmap is on the [docs page](https://trustflow-qie.vercel.app/docs#roadmap).
+
+| Quarter | Theme | Highlights |
+|---------|-------|------------|
+| **Q3 2026** | Production Readiness | Security audit, QIE mainnet deployment, live QIE Pass + Domains integration |
+| **Q4 2026** | Protocol Depth | Under-collateralized lending, streaming payments, staked arbitration |
+| **Q1 2027** | Ecosystem Expansion | Public SDK/API, embeddable widget, composable reputation, PWA |
+| **Q2 2027** | Scale and Sustainability | Cross-chain portability, fiat on/off ramps, DAO governance |
+
 ## Built By
 
 Vinay ([@vinaystwt](https://twitter.com/vinaystwt))
