@@ -208,8 +208,15 @@ export async function POST(req: NextRequest) {
           abi: ERC20_ABI,
           functionName: 'approve',
           args: [TRUSTFLOW_ADDRESS, maxUint256],
+          gas: 100_000n,
         })
-        await publicClient.waitForTransactionReceipt({ hash: approveHash })
+        const approveReceipt = await publicClient.waitForTransactionReceipt({ hash: approveHash })
+        if (approveReceipt.status === 'reverted') {
+          return NextResponse.json(
+            { success: false, error: 'QUSDC approve transaction reverted on-chain.', fallback: true },
+            { status: 500 }
+          )
+        }
       }
 
       // Fund
@@ -218,8 +225,15 @@ export async function POST(req: NextRequest) {
         abi: TRUSTFLOW_ABI,
         functionName: 'fundAgreement',
         args: [BigInt(agreementId)],
+        gas: 500_000n,
       })
-      await publicClient.waitForTransactionReceipt({ hash: txHash })
+      const fundReceipt = await publicClient.waitForTransactionReceipt({ hash: txHash })
+      if (fundReceipt.status === 'reverted') {
+        return NextResponse.json(
+          { success: false, error: 'fundAgreement transaction reverted on-chain.', txHash, fallback: true },
+          { status: 500 }
+        )
+      }
     } else {
       // approve action
       // Agreement must be Active (1)
@@ -235,8 +249,15 @@ export async function POST(req: NextRequest) {
         abi: TRUSTFLOW_ABI,
         functionName: 'approveMilestone',
         args: [BigInt(agreementId), BigInt(milestoneIndex!)],
+        gas: 500_000n,
       })
-      await publicClient.waitForTransactionReceipt({ hash: txHash })
+      const approveReceipt = await publicClient.waitForTransactionReceipt({ hash: txHash })
+      if (approveReceipt.status === 'reverted') {
+        return NextResponse.json(
+          { success: false, error: 'approveMilestone transaction reverted on-chain.', txHash, fallback: true },
+          { status: 500 }
+        )
+      }
     }
 
     return NextResponse.json({ success: true, txHash })
