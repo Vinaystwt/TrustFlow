@@ -35,9 +35,31 @@ import { CodeBlock } from '@/components/CodeBlock'
 import { SystemArchitecture } from '@/components/diagrams/SystemArchitecture'
 import { AgreementLifecycle } from '@/components/diagrams/AgreementLifecycle'
 import { TrustScoreSystem } from '@/components/diagrams/TrustScoreSystem'
-import { TRUSTFLOW_ADDRESS, QUSDC_ADDRESS } from '@/lib/contracts'
-import { explorerAddress } from '@/lib/chains'
+import { NETWORKS } from '@/lib/chains'
 import { TIERS } from '@/lib/utils'
+
+const CONTRACT_LINKS = [
+  {
+    label: 'TrustFlow Mainnet',
+    address: NETWORKS.mainnet.trustFlowAddress,
+    explorer: NETWORKS.mainnet.explorer,
+  },
+  {
+    label: 'TrustFlow Testnet',
+    address: NETWORKS.testnet.trustFlowAddress,
+    explorer: NETWORKS.testnet.explorer,
+  },
+  {
+    label: 'QUSDC Mainnet',
+    address: NETWORKS.mainnet.qusdcAddress,
+    explorer: NETWORKS.mainnet.explorer,
+  },
+  {
+    label: 'MockQUSDC Testnet',
+    address: NETWORKS.testnet.qusdcAddress,
+    explorer: NETWORKS.testnet.explorer,
+  },
+]
 
 const EDIT_URL =
   'https://github.com/Vinaystwt/TrustFlow/edit/master/frontend/app/docs/page.tsx'
@@ -58,7 +80,7 @@ const SECTIONS: DocSection[] = [
 // Searchable text per section (title + key content) for client-side filtering.
 const SEARCH_INDEX: Record<string, string> = {
   overview: 'overview payfi protocol qie blockchain freelancers clients milestone payment agreements qusdc escrow trust score components tiers platform fee',
-  'getting-started': 'getting started setup install metamask qie testnet network faucet qusdc mint token import demo onboarding wallet connect five steps',
+  'getting-started': 'getting started setup install metamask qie mainnet testnet network faucet bridge qusdc mint token import demo onboarding wallet connect five steps chain 1990 1983',
   'how-it-works': 'how it works connect qie wallet create milestone agreement share funding link client funds qusdc deliver proof approve payment releases trust scores update',
   'trust-score': 'trust score system completed agreements volume qie pass verified disputes formula tiers newcomer verified trusted elite benefits dispute window settlement',
   architecture: 'architecture frontend nextjs wagmi contracts qie ecosystem wallet domains qiedex agreement lifecycle layers',
@@ -164,7 +186,9 @@ const ROADMAP_SHIPPED = [
   'Solo demo mode with server-side relayer',
   'In-app faucet, one-click network add, token import',
   'Leaderboard and protocol analytics',
-  'Live on QIE Testnet',
+  'Mainnet deployment to QIE with real QUSDC',
+  'Live QIEDEX price quotes on mainnet',
+  'Live on QIE Mainnet and Testnet',
 ]
 
 const ROADMAP_QUARTERS = [
@@ -175,7 +199,7 @@ const ROADMAP_QUARTERS = [
     color: '#3B82F6',
     items: [
       'Professional smart contract security audit',
-      'Mainnet deployment to QIE with real QUSDC',
+      'First production users milestone',
       'Gas optimization pass on all contract functions',
       'Full live QIE Pass SDK integration (replacing mock proxy)',
       'Real QIE Domains resolution (name.qie to on-chain addresses)',
@@ -438,7 +462,7 @@ export default function DocsPage() {
                     icon: Globe,
                     step: '1',
                     title: 'Add QIE Testnet to your wallet',
-                    body: 'Click "Add Network" on the /start page, or manually add: Chain ID 1983, RPC https://rpc1testnet.qie.digital, Symbol QIE.',
+                    body: 'Click "Add Network" on the /start page, or add either QIE network manually using the details below.',
                   },
                   {
                     icon: Fuel,
@@ -508,8 +532,21 @@ export default function DocsPage() {
                   <PlayCircle size={16} /> Solo Demo
                 </Link>
               </div>
-              <div className="mt-4 rounded-xl bg-brand-primary/8 px-4 py-3 text-sm text-text-secondary">
-                <strong className="text-text">Network details:</strong> Chain ID <code className="font-mono text-brand-primary-light">1983</code> (hex <code className="font-mono text-brand-primary-light">0x7BF</code>), RPC <code className="font-mono text-brand-primary-light">https://rpc1testnet.qie.digital</code>, Currency <code className="font-mono text-brand-primary-light">QIE</code>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl bg-success/8 px-4 py-3 text-sm text-text-secondary">
+                  <p className="font-display font-semibold text-success">QIE Mainnet (production)</p>
+                  <p className="mt-1.5">Chain ID <code className="font-mono text-brand-primary-light">1990</code></p>
+                  <p>RPC <code className="font-mono text-brand-primary-light">https://rpc1mainnet.qie.digital/</code></p>
+                  <p>Explorer <code className="font-mono text-brand-primary-light">https://mainnet.qie.digital/</code></p>
+                  <p className="break-all">QUSDC <code className="font-mono text-brand-primary-light">0x3F43DA82eC9A4f5285F10FaF1F26EcA7319E5DA5</code></p>
+                </div>
+                <div className="rounded-xl bg-accent-amber/8 px-4 py-3 text-sm text-text-secondary">
+                  <p className="font-display font-semibold text-accent-amber">QIE Testnet (development)</p>
+                  <p className="mt-1.5">Chain ID <code className="font-mono text-brand-primary-light">1983</code></p>
+                  <p>RPC <code className="font-mono text-brand-primary-light">https://rpc1testnet.qie.digital/</code></p>
+                  <p>Explorer <code className="font-mono text-brand-primary-light">https://testnet.qie.digital/</code></p>
+                  <p className="break-all">Mock QUSDC <code className="font-mono text-brand-primary-light">0x1850d2a31CB8669Ba757159B638DE19Af532ba5e</code></p>
+                </div>
               </div>
             </DocSectionBlock>
 
@@ -675,28 +712,19 @@ export default function DocsPage() {
             <DocSectionBlock id="contracts" hidden={isHidden('contracts')}>
               <SectionHeading>Smart contracts</SectionHeading>
               <div className="card mt-6 space-y-4 p-5">
-                <div>
-                  <p className="text-xs uppercase text-text-dim">TrustFlow</p>
-                  <a
-                    href={explorerAddress(TRUSTFLOW_ADDRESS)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-1 inline-flex items-center gap-1.5 break-all font-mono text-sm text-brand-primary-light hover:underline"
-                  >
-                    {TRUSTFLOW_ADDRESS} <ExternalLink size={12} className="shrink-0" />
-                  </a>
-                </div>
-                <div>
-                  <p className="text-xs uppercase text-text-dim">MockQUSDC</p>
-                  <a
-                    href={explorerAddress(QUSDC_ADDRESS)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-1 inline-flex items-center gap-1.5 break-all font-mono text-sm text-brand-primary-light hover:underline"
-                  >
-                    {QUSDC_ADDRESS} <ExternalLink size={12} className="shrink-0" />
-                  </a>
-                </div>
+                {CONTRACT_LINKS.map((c) => (
+                  <div key={c.label}>
+                    <p className="text-xs uppercase text-text-dim">{c.label}</p>
+                    <a
+                      href={`${c.explorer}/address/${c.address}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 inline-flex items-center gap-1.5 break-all font-mono text-sm text-brand-primary-light hover:underline"
+                    >
+                      {c.address} <ExternalLink size={12} className="shrink-0" />
+                    </a>
+                  </div>
+                ))}
               </div>
 
               <h3 className="mt-6 font-display text-sm font-semibold uppercase tracking-wide text-text-dim">

@@ -19,6 +19,8 @@
 
 TrustFlow is a PayFi protocol on QIE Blockchain where every completed payment builds your on-chain credit history. Freelancers and clients create milestone-based payment agreements using QUSDC stablecoin. Each completed agreement updates both parties' Trust Score, which unlocks progressively better financial terms enforced directly by the smart contract.
 
+Live on QIE Mainnet and Testnet. Switch networks from the header: mainnet uses real QUSDC, testnet uses a faucet and a hosted solo demo for safe experimentation.
+
 ## The Problem
 
 Web3 payments are zero-trust and zero-context. There is no way to build a credit history, earn better terms, or prove you are a reliable counterparty. This forces 150%+ overcollateralization on DeFi loans and excludes 1.4 billion unbanked adults from credit entirely. The root cause: blockchain anonymity makes it impossible to link identity with financial track record.
@@ -62,7 +64,7 @@ The Trust Score is not cosmetic. It enforces real financial terms at the smart c
 TrustFlow has three layers:
 
 - **Frontend**: Next.js 14 dApp with wagmi v2, viem, RainbowKit, and Framer Motion animations
-- **Smart Contracts**: Solidity 0.8.20 on QIE Testnet. Tier-enforced escrow, trust score engine, and payment processor with SafeERC20 and ReentrancyGuard
+- **Smart Contracts**: Solidity 0.8.20 on QIE Mainnet and Testnet. Tier-enforced escrow, trust score engine, and payment processor with SafeERC20 and ReentrancyGuard
 - **QIE Ecosystem**: Deep integration with all five core QIE components
 
 ![System Architecture](docs/architecture.svg)
@@ -77,7 +79,7 @@ TrustFlow is the only protocol integrating all five core QIE components:
 | **QUSDC** | All payments settled in QIE's native stablecoin (6 decimals) |
 | **QIE Pass** | Identity verification. Verified users get +200 trust score bonus |
 | **QIE Domains** | Human-readable payment addresses (pay to name.qie) |
-| **QIEDEX** | Token swap integration for multi-token funding |
+| **QIEDEX** | Live QIE price quotes read from the QIEDEX router on mainnet |
 
 ## Features
 
@@ -93,7 +95,8 @@ TrustFlow is the only protocol integrating all five core QIE components:
 
 **Cold-Visitor Onboarding**
 - In-app QUSDC faucet (one-click mint, no external site needed)
-- One-click "Add QIE Testnet" network button
+- One-click "Add Network" button (adds the active QIE network)
+- Header network switcher (mainnet and testnet) with EIP-6963 wallet chain sync
 - Guided getting-started checklist at /start
 - Solo demo mode at /demo (automated client funds and approves for you)
 - One-click QUSDC token import to wallet (EIP-6963 aware)
@@ -112,19 +115,35 @@ TrustFlow is the only protocol integrating all five core QIE components:
 
 ## Try It Yourself
 
-1. **Visit** [trustflow-qie.vercel.app](https://trustflow-qie.vercel.app) and connect your wallet
-2. **Add QIE Testnet**: click the "Add QIE Testnet" button (one click)
-3. **Get gas**: visit the [QIE faucet](https://www.qie.digital/faucet) for testnet QIE
-4. **Get test QUSDC**: click the faucet button in the app (mints 1,000 QUSDC)
-5. **Run the solo demo**: visit [/demo](https://trustflow-qie.vercel.app/demo) for a guided full-cycle walkthrough
+The app defaults to QIE Mainnet. Switch to testnet from the header dropdown for safe experimentation with a faucet and the hosted solo demo.
 
-Or visit [/start](https://trustflow-qie.vercel.app/start) for the interactive getting-started checklist.
+**On mainnet (production):**
+1. **Visit** [trustflow-qie.vercel.app](https://trustflow-qie.vercel.app) and connect your wallet
+2. **Add QIE Mainnet**: click the "Add QIE Mainnet" button (one click)
+3. **Get gas**: buy QIE on an exchange or bridge in at [bridge.qie.digital](https://bridge.qie.digital/)
+4. **Get QUSDC**: bridge USDC to QUSDC at [bridge.qie.digital](https://bridge.qie.digital/)
+5. **Create your first agreement**: set up a milestone payment and start building credit
+
+**On testnet (free experimentation):**
+1. Switch to QIE Testnet in the header
+2. Get testnet QIE from the [QIE faucet](https://www.qie.digital/faucet)
+3. Mint test QUSDC with the in-app faucet button
+4. Run the [solo demo](https://trustflow-qie.vercel.app/demo) for a guided full cycle
+
+Or visit [/start](https://trustflow-qie.vercel.app/start) for the interactive getting-started checklist, which adapts to the active network.
 
 <details>
 <summary><strong>Manual network config (if one-click add doesn't work)</strong></summary>
 
 ```
-Network: QIE Testnet
+QIE Mainnet
+RPC: https://rpc1mainnet.qie.digital/
+Chain ID: 1990
+Currency: QIE
+Explorer: https://mainnet.qie.digital/
+QUSDC Token: 0x3F43DA82eC9A4f5285F10FaF1F26EcA7319E5DA5
+
+QIE Testnet
 RPC: https://rpc1testnet.qie.digital/
 Chain ID: 1983
 Currency: QIE
@@ -136,11 +155,12 @@ QUSDC Token: 0x1850d2a31CB8669Ba757159B638DE19Af532ba5e
 
 ## Smart Contracts
 
-| Contract | Address | Explorer |
-|----------|---------|----------|
-| TrustFlow v1.1 | `0xcD0915cb3423F6665C636d723648F78d88B81e52` | [View](https://testnet.qie.digital/address/0xcD0915cb3423F6665C636d723648F78d88B81e52) |
-| TrustFlow v1.0 (fallback) | `0x9db2e380f9100793ea71413224dD7C22F97aD91B` | [View](https://testnet.qie.digital/address/0x9db2e380f9100793ea71413224dD7C22F97aD91B) |
-| MockQUSDC | `0x1850d2a31CB8669Ba757159B638DE19Af532ba5e` | [View](https://testnet.qie.digital/address/0x1850d2a31CB8669Ba757159B638DE19Af532ba5e) |
+| Contract | Network | Address | Explorer |
+|----------|---------|---------|----------|
+| TrustFlow | Mainnet | `0xB9F38E0180F62e80Be6ca44cE6202316FCcefEC9` | [View](https://mainnet.qie.digital/address/0xB9F38E0180F62e80Be6ca44cE6202316FCcefEC9) |
+| QUSDC | Mainnet | `0x3F43DA82eC9A4f5285F10FaF1F26EcA7319E5DA5` | [View](https://mainnet.qie.digital/address/0x3F43DA82eC9A4f5285F10FaF1F26EcA7319E5DA5) |
+| TrustFlow | Testnet | `0xcD0915cb3423F6665C636d723648F78d88B81e52` | [View](https://testnet.qie.digital/address/0xcD0915cb3423F6665C636d723648F78d88B81e52) |
+| MockQUSDC | Testnet | `0x1850d2a31CB8669Ba757159B638DE19Af532ba5e` | [View](https://testnet.qie.digital/address/0x1850d2a31CB8669Ba757159B638DE19Af532ba5e) |
 
 **Key contract functions:**
 - `createAgreement()` : Create a milestone payment agreement
@@ -162,10 +182,10 @@ Built with Solidity 0.8.20, OpenZeppelin, ReentrancyGuard, SafeERC20. **106 test
 | Animations | Framer Motion |
 | Web3 | wagmi v2, viem, RainbowKit (EIP-6963 multi-wallet) |
 | Smart Contracts | Solidity 0.8.20, Hardhat, OpenZeppelin |
-| Blockchain | QIE Testnet (Chain ID: 1983) |
+| Blockchain | QIE Mainnet (1990) and Testnet (1983) |
 | Stablecoin | QUSDC (6 decimals) |
 | Fonts | Space Grotesk, Manrope, JetBrains Mono |
-| Deployment | Vercel (frontend), QIE Testnet (contracts) |
+| Deployment | Vercel (frontend), QIE Mainnet and Testnet (contracts) |
 
 ## Local Development
 
@@ -187,7 +207,7 @@ cp .env.example .env.local  # add your env vars
 npm run dev                  # http://localhost:3000
 ```
 
-**Prerequisites:** Node.js 18+, MetaMask or QIE Wallet configured for QIE Testnet.
+**Prerequisites:** Node.js 18+, MetaMask or QIE Wallet configured for QIE Mainnet or Testnet.
 
 ## How It Is Built
 
