@@ -69,10 +69,13 @@ export function Hero() {
           </div>
 
           <p className="mt-5 text-sm text-text-dim">
-            No fees during beta · Live on QIE testnet ·{' '}
+            Live on QIE Mainnet ·{' '}
             <Link href="/start" className="text-brand-primary-light hover:underline">
               New here? Start guide
             </Link>
+          </p>
+          <p className="mt-1 text-xs text-text-dim">
+            Also available on testnet for testing.
           </p>
         </motion.div>
 

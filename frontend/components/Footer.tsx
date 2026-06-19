@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { Github, Twitter } from 'lucide-react'
 import { Logo } from './Logo'
-import { TRUSTFLOW_ADDRESS } from '@/lib/contracts'
-import { explorerAddress } from '@/lib/chains'
+import { NETWORKS } from '@/lib/chains'
+
+const MAINNET = NETWORKS.mainnet
 
 const PRODUCT = [
   { label: 'Dashboard', href: '/dashboard' },
@@ -50,7 +51,7 @@ export function Footer() {
             title="Resources"
             links={[
               { label: 'How it works', href: '/docs' },
-              { label: 'Smart contracts', href: explorerAddress(TRUSTFLOW_ADDRESS), external: true },
+              { label: 'Smart contracts', href: `${MAINNET.explorer}/address/${MAINNET.trustFlowAddress}`, external: true },
               { label: 'QIE Blockchain', href: 'https://www.qie.digital', external: true },
               { label: 'GitHub repo', href: 'https://github.com/Vinaystwt/TrustFlow', external: true },
             ]}
@@ -74,7 +75,7 @@ export function Footer() {
             © {new Date().getFullYear()} TrustFlow. All rights reserved.
           </p>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs text-text-secondary">
-            <span className="h-1.5 w-1.5 rounded-full bg-success" /> Made on QIE Testnet
+            <span className="h-1.5 w-1.5 rounded-full bg-success" /> Live on QIE Mainnet and Testnet
           </span>
         </div>
       </div>

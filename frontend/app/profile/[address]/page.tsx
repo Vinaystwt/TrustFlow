@@ -22,7 +22,8 @@ import { SkeletonRing } from '@/components/Skeleton'
 import { useToast } from '@/components/Toast'
 import { useGetTrustProfile, useGetUserAgreements } from '@/hooks/useTrustFlow'
 import { useProtocolEvents } from '@/hooks/useEvents'
-import { TRUSTFLOW_ABI, TRUSTFLOW_ADDRESS } from '@/lib/contracts'
+import { TRUSTFLOW_ABI } from '@/lib/contracts'
+import { useContracts } from '@/lib/useContracts'
 import { formatQUSDC, formatDate, isValidAddress, cx, type Agreement } from '@/lib/utils'
 
 const TABS = ['Overview', 'Agreements', 'Activity'] as const
@@ -35,6 +36,7 @@ export default function ProfilePage() {
   const address = valid ? (addrParam as Address) : undefined
 
   const { toast } = useToast()
+  const { trustFlowAddress, chainId } = useContracts()
   const { profile, isLoading } = useGetTrustProfile(address)
   const { ids } = useGetUserAgreements(address)
   const { events } = useProtocolEvents()
@@ -44,11 +46,12 @@ export default function ProfilePage() {
     () =>
       (ids ?? []).map((id) => ({
         abi: TRUSTFLOW_ABI,
-        address: TRUSTFLOW_ADDRESS,
+        address: trustFlowAddress,
+        chainId,
         functionName: 'getAgreement',
         args: [id],
       })),
-    [ids]
+    [ids, trustFlowAddress, chainId]
   )
   const { data: dataRaw } = useReadContracts({
     contracts: contracts as never,

@@ -10,7 +10,7 @@ const CARDS = [
   { icon: <Coins size={22} />, name: 'QUSDC Stablecoin', description: "All payments settled in QIE's native stable.", accent: '#06B6D4' },
   { icon: <BadgeCheck size={22} />, name: 'QIE Pass', description: 'Identity verification gives +200 trust score.', accent: '#A855F7' },
   { icon: <Globe size={22} />, name: 'QIE Domains', description: 'Pay to priya.qie instead of hex addresses.', accent: '#EC4899' },
-  { icon: <ArrowLeftRight size={22} />, name: 'QIEDEX', description: 'Token swaps for multi-token funding.', accent: '#F59E0B' },
+  { icon: <ArrowLeftRight size={22} />, name: 'QIEDEX', description: 'Live price quotes from QIEDEX router on mainnet.', accent: '#F59E0B' },
 ]
 
 export function EcosystemGrid() {

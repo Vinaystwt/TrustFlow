@@ -27,7 +27,9 @@ import { OnboardingModal } from '@/components/OnboardingModal'
 import { SkeletonCard, SkeletonRing, SkeletonStat } from '@/components/Skeleton'
 import { useGetTrustProfile, useGetUserAgreements, useQUSDCBalance } from '@/hooks/useTrustFlow'
 import { useProtocolEvents } from '@/hooks/useEvents'
-import { TRUSTFLOW_ABI, TRUSTFLOW_ADDRESS } from '@/lib/contracts'
+import { TRUSTFLOW_ABI } from '@/lib/contracts'
+import { useContracts } from '@/lib/useContracts'
+import { NetworkBadge } from '@/components/NetworkBadge'
 import {
   qusdcToNumber,
   nextTierAt,
@@ -49,6 +51,7 @@ export default function DashboardPage() {
     }
   }, [isConnected, status, router])
 
+  const { trustFlowAddress, chainId, networkName } = useContracts()
   const { profile, isLoading: profileLoading } = useGetTrustProfile(address)
   const { ids, isLoading: idsLoading } = useGetUserAgreements(address)
   const { balance: qusdcBalance } = useQUSDCBalance(address)
@@ -58,21 +61,23 @@ export default function DashboardPage() {
     () =>
       (ids ?? []).map((id) => ({
         abi: TRUSTFLOW_ABI,
-        address: TRUSTFLOW_ADDRESS,
+        address: trustFlowAddress,
+        chainId,
         functionName: 'getAgreement',
         args: [id],
       })),
-    [ids]
+    [ids, trustFlowAddress, chainId]
   )
   const milestoneContracts = useMemo(
     () =>
       (ids ?? []).map((id) => ({
         abi: TRUSTFLOW_ABI,
-        address: TRUSTFLOW_ADDRESS,
+        address: trustFlowAddress,
+        chainId,
         functionName: 'getMilestones',
         args: [id],
       })),
-    [ids]
+    [ids, trustFlowAddress, chainId]
   )
 
   const { data: agRaw, isLoading: agLoading } = useReadContracts({
@@ -158,6 +163,14 @@ export default function DashboardPage() {
   return (
     <PageWrapper>
       {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
+
+      {/* Network indicator */}
+      <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <NetworkBadge />
+        <span className="text-xs text-text-dim">
+          Showing data from {networkName}. Switch network in the header to see the other.
+        </span>
+      </div>
 
       {/* Top banner */}
       <div className="card relative overflow-hidden p-6 sm:p-8">

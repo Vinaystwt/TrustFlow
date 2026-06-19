@@ -8,15 +8,20 @@ import { StatCard } from '@/components/StatCard'
 import { ActivityFeed } from '@/components/ActivityFeed'
 import { Skeleton } from '@/components/Skeleton'
 import { useProtocolEvents, uniqueUsers } from '@/hooks/useEvents'
-import { TRUSTFLOW_ABI, TRUSTFLOW_ADDRESS } from '@/lib/contracts'
+import { TRUSTFLOW_ABI } from '@/lib/contracts'
+import { useContracts } from '@/lib/useContracts'
+import { NetworkBadge } from '@/components/NetworkBadge'
+import { QIEPriceTicker } from '@/components/QIEPriceTicker'
 import { qusdcToNumber, TIERS, type Agreement, type TrustProfile } from '@/lib/utils'
 
 export default function AnalyticsPage() {
+  const { trustFlowAddress, chainId, networkName, key: networkKey } = useContracts()
   const { events, isLoading: eventsLoading } = useProtocolEvents(30_000)
 
   const { data: counterRaw } = useReadContract({
     abi: TRUSTFLOW_ABI,
-    address: TRUSTFLOW_ADDRESS,
+    address: trustFlowAddress,
+    chainId,
     functionName: 'agreementCounter',
   })
   const counter = counterRaw ? Number(counterRaw as bigint) : 0
@@ -25,11 +30,12 @@ export default function AnalyticsPage() {
     () =>
       Array.from({ length: counter }, (_, i) => ({
         abi: TRUSTFLOW_ABI,
-        address: TRUSTFLOW_ADDRESS,
+        address: trustFlowAddress,
+        chainId,
         functionName: 'getAgreement',
         args: [BigInt(i + 1)],
       })),
-    [counter]
+    [counter, trustFlowAddress, chainId]
   )
   const { data: agRaw } = useReadContracts({
     contracts: agreementContracts as never,
@@ -44,11 +50,12 @@ export default function AnalyticsPage() {
     () =>
       users.map((u) => ({
         abi: TRUSTFLOW_ABI,
-        address: TRUSTFLOW_ADDRESS,
+        address: trustFlowAddress,
+        chainId,
         functionName: 'getTrustProfile',
         args: [u],
       })),
-    [users]
+    [users, trustFlowAddress, chainId]
   )
   const { data: profRaw } = useReadContracts({
     contracts: profileContracts as never,
@@ -73,7 +80,12 @@ export default function AnalyticsPage() {
       <h1 className="font-display text-3xl font-bold tracking-tight text-text">
         Protocol Analytics
       </h1>
-      <p className="mt-1 text-text-secondary">Live data from TrustFlow on QIE Testnet</p>
+      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <NetworkBadge />
+        <span className="text-xs text-text-dim">
+          Showing data from {networkName}. Switch network in the header to see the other.
+        </span>
+      </div>
 
       {/* Hero stats */}
       <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -85,7 +97,9 @@ export default function AnalyticsPage() {
 
       {counter === 0 && (
         <p className="mt-4 text-sm text-text-dim">
-          The protocol is freshly deployed. Stats update in real-time as agreements are created.
+          {networkKey === 'mainnet'
+            ? 'Just launched on mainnet. Stats will populate as users transact.'
+            : 'The protocol is freshly deployed. Stats update in real-time as agreements are created.'}
         </p>
       )}
 
@@ -134,6 +148,14 @@ export default function AnalyticsPage() {
         ) : (
           <ActivityFeed events={events} limit={20} emptyText="No protocol activity yet." />
         )}
+      </div>
+
+      {/* Footer: data provenance + live QIEDEX price */}
+      <div className="mt-8 flex flex-col items-center gap-3 text-center">
+        <QIEPriceTicker />
+        <p className="text-xs text-text-dim">
+          Protocol metrics powered by on-chain reads. QIE price from QIEDEX.
+        </p>
       </div>
     </PageWrapper>
   )

@@ -6,13 +6,20 @@ import { useReadContract, useReadContracts } from 'wagmi'
 import { FileText, Banknote, Gauge, Users } from 'lucide-react'
 import { Section, Eyebrow, SectionTitle, SectionSub } from '@/components/Section'
 import { CountUp } from '@/components/CountUp'
-import { TRUSTFLOW_ABI, TRUSTFLOW_ADDRESS } from '@/lib/contracts'
+import { NetworkBadge } from '@/components/NetworkBadge'
+import { QIEPriceTicker } from '@/components/QIEPriceTicker'
+import { useActiveNetwork } from '@/hooks/useActiveNetwork'
+import { TRUSTFLOW_ABI } from '@/lib/contracts'
+import { useContracts } from '@/lib/useContracts'
 import { qusdcToNumber, type Agreement, type TrustProfile } from '@/lib/utils'
 
 export function LiveStats() {
+  const { trustFlowAddress, chainId, networkName, key: networkKey } = useContracts()
+  const { setActiveNetwork } = useActiveNetwork()
   const { data: counterRaw } = useReadContract({
     abi: TRUSTFLOW_ABI,
-    address: TRUSTFLOW_ADDRESS,
+    address: trustFlowAddress,
+    chainId,
     functionName: 'agreementCounter',
   })
   const counter = counterRaw ? Number(counterRaw as bigint) : 0
@@ -21,11 +28,12 @@ export function LiveStats() {
     () =>
       Array.from({ length: counter }, (_, i) => ({
         abi: TRUSTFLOW_ABI,
-        address: TRUSTFLOW_ADDRESS,
+        address: trustFlowAddress,
+        chainId,
         functionName: 'getAgreement',
         args: [BigInt(i + 1)],
       })),
-    [counter]
+    [counter, trustFlowAddress, chainId]
   )
 
   const { data: agRaw } = useReadContracts({
@@ -49,11 +57,12 @@ export function LiveStats() {
     () =>
       users.map((u) => ({
         abi: TRUSTFLOW_ABI,
-        address: TRUSTFLOW_ADDRESS,
+        address: trustFlowAddress,
+        chainId,
         functionName: 'getTrustProfile',
         args: [u as `0x${string}`],
       })),
-    [users]
+    [users, trustFlowAddress, chainId]
   )
   const { data: profRaw } = useReadContracts({
     contracts: profileContracts as never,
@@ -87,13 +96,29 @@ export function LiveStats() {
         className="text-center"
       >
         <Eyebrow>Live Protocol Stats</Eyebrow>
-        <SectionTitle>Live on QIE Testnet.</SectionTitle>
+        <SectionTitle>Live on {networkName}.</SectionTitle>
         <div className="mx-auto mt-4 max-w-xl">
           <SectionSub>Real on-chain data from the deployed protocol.</SectionSub>
         </div>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+          <NetworkBadge />
+          <button
+            onClick={() => setActiveNetwork(networkKey === 'mainnet' ? 'testnet' : 'mainnet')}
+            className="text-xs text-brand-primary-light hover:underline"
+          >
+            {networkKey === 'mainnet'
+              ? 'Switch to testnet to see existing demo activity'
+              : 'Switch to mainnet'}
+          </button>
+        </div>
       </motion.div>
 
-      <div className="mt-12 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {/* Live QIEDEX price ticker (mainnet only) */}
+      <div className="mt-8 flex justify-center">
+        <QIEPriceTicker />
+      </div>
+
+      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {STATS.map((s) => (
           <div key={s.label} className="card p-6 text-center">
             <span className="inline-flex items-center gap-1.5 text-text-secondary">

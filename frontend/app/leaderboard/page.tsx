@@ -11,12 +11,15 @@ import { AddressDisplay } from '@/components/AddressDisplay'
 import { Avatar } from '@/components/Avatar'
 import { Skeleton } from '@/components/Skeleton'
 import { useProtocolEvents, uniqueUsers } from '@/hooks/useEvents'
-import { TRUSTFLOW_ABI, TRUSTFLOW_ADDRESS } from '@/lib/contracts'
+import { TRUSTFLOW_ABI } from '@/lib/contracts'
+import { useContracts } from '@/lib/useContracts'
+import { NetworkBadge } from '@/components/NetworkBadge'
 import { formatQUSDC, cx, type TrustProfile } from '@/lib/utils'
 
 const MEDAL = ['#F59E0B', '#94A3B8', '#B45309']
 
 export default function LeaderboardPage() {
+  const { trustFlowAddress, chainId, key: networkKey } = useContracts()
   const { events, isLoading: eventsLoading } = useProtocolEvents()
   const users = useMemo(() => uniqueUsers(events), [events])
 
@@ -24,11 +27,12 @@ export default function LeaderboardPage() {
     () =>
       users.map((u) => ({
         abi: TRUSTFLOW_ABI,
-        address: TRUSTFLOW_ADDRESS,
+        address: trustFlowAddress,
+        chainId,
         functionName: 'getTrustProfile',
         args: [u],
       })),
-    [users]
+    [users, trustFlowAddress, chainId]
   )
 
   const { data: profRaw, isLoading: profLoading } = useReadContracts({
@@ -61,6 +65,13 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
+      <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <NetworkBadge />
+        <span className="text-xs text-text-dim">
+          Switch network in the header to see the other.
+        </span>
+      </div>
+
       <div className="card mt-8 overflow-hidden">
         {loading ? (
           <div className="space-y-3 p-5">
@@ -72,7 +83,9 @@ export default function LeaderboardPage() {
           <div className="flex flex-col items-center px-6 py-16 text-center">
             <Trophy size={28} className="text-text-dim" />
             <p className="mt-4 font-display text-lg font-semibold text-text">
-              Be the first.
+              {networkKey === 'mainnet'
+                ? 'Be the first to build credit on QIE Mainnet.'
+                : 'Be the first.'}
             </p>
             <p className="mt-1 text-sm text-text-secondary">
               Create an agreement to claim the top spot.
