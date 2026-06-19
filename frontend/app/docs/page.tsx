@@ -668,7 +668,7 @@ export default function DocsPage() {
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 {[
                   { t: 'Frontend', b: 'Next.js + wagmi reads and writes directly to the contract, no backend.' },
-                  { t: 'Contracts', b: 'TrustFlow escrow + trust engine, deployed on QIE Testnet.' },
+                  { t: 'Contracts', b: 'TrustFlow escrow + trust engine, deployed on QIE Mainnet and Testnet.' },
                   { t: 'QIE ecosystem', b: 'Wallet, QUSDC, QIE Pass, Domains and QIEDEX provide the rails.' },
                 ].map((l) => (
                   <div key={l.t} className="card p-4">
