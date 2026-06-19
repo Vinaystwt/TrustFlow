@@ -9,7 +9,13 @@ import { NETWORKS } from '@/lib/chains'
 // QIEDEX router + tokens on QIE Mainnet
 const QIEDEX_ROUTER = '0x2601a070A12749BC2ee095F17D9fbe904505C2dF' as Address
 const WQIE = '0x0087904D95BEe9E5F24dc8852804b547981A9139' as Address
+const WETH = '0x95322ccB3fb8dDefD210805EE18662762a0bc4A2' as Address
 const QUSDC_MAINNET = NETWORKS.mainnet.qusdcAddress
+
+const PATHS: Address[][] = [
+  [WQIE, WETH, QUSDC_MAINNET],
+  [WQIE, QUSDC_MAINNET],
+]
 
 const ROUTER_ABI = [
   {
@@ -55,34 +61,35 @@ export function useQIEPrice(): { price: QIEPrice | null; isLoading: boolean } {
     setLoading(true)
 
     const read = async () => {
-      try {
-        const amounts = (await client.readContract({
-          address: QIEDEX_ROUTER,
-          abi: ROUTER_ABI,
-          functionName: 'getAmountsOut',
-          args: [ONE_QIE, [WQIE, QUSDC_MAINNET]],
-        })) as readonly bigint[]
+      for (const path of PATHS) {
+        try {
+          const amounts = (await client.readContract({
+            address: QIEDEX_ROUTER,
+            abi: ROUTER_ABI,
+            functionName: 'getAmountsOut',
+            args: [ONE_QIE, path],
+          })) as readonly bigint[]
 
-        const out = amounts?.[amounts.length - 1]
-        if (!active) return
-        if (out && out > 0n) {
-          const usd = Number(formatUnits(out, 6))
-          setPrice({
-            usd,
-            display: `$${usd.toLocaleString('en-US', {
-              minimumFractionDigits: usd < 1 ? 4 : 2,
-              maximumFractionDigits: usd < 1 ? 4 : 2,
-            })}`,
-          })
-        } else {
-          setPrice(null)
+          const out = amounts?.[amounts.length - 1]
+          if (!active) return
+          if (out && out > 0n) {
+            const usd = Number(formatUnits(out, 6))
+            setPrice({
+              usd,
+              display: `$${usd.toLocaleString('en-US', {
+                minimumFractionDigits: usd < 1 ? 4 : 2,
+                maximumFractionDigits: usd < 1 ? 4 : 2,
+              })}`,
+            })
+            setLoading(false)
+            return
+          }
+        } catch {
+          // Path failed, try next
         }
-      } catch {
-        // No liquidity / RPC issue: hide the ticker rather than show a broken value.
-        if (active) setPrice(null)
-      } finally {
-        if (active) setLoading(false)
       }
+      if (active) setPrice(null)
+      if (active) setLoading(false)
     }
 
     read()

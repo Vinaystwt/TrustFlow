@@ -2,16 +2,15 @@
 
 import { ArrowLeftRight, ExternalLink } from 'lucide-react'
 import { useQIEPrice } from '@/hooks/useQIEPrice'
+import { useContracts } from '@/lib/useContracts'
 import { cx } from '@/lib/utils'
 
-/**
- * Live QIE price from the QIEDEX router (mainnet only).
- * Renders nothing on testnet or when no price is available.
- */
 export function QIEPriceTicker({ className }: { className?: string }) {
-  const { price } = useQIEPrice()
+  const { price, isLoading } = useQIEPrice()
+  const { key } = useContracts()
 
-  if (!price) return null
+  if (key !== 'mainnet') return null
+  if (isLoading) return null
 
   return (
     <a
@@ -27,11 +26,23 @@ export function QIEPriceTicker({ className }: { className?: string }) {
         <ArrowLeftRight size={15} />
       </span>
       <span className="text-left">
-        <span className="flex items-center gap-1.5 font-display text-sm font-bold text-text">
-          1 QIE ≈ {price.display}
-          <ExternalLink size={12} className="text-text-dim transition-colors group-hover:text-brand-primary-light" />
-        </span>
-        <span className="text-[11px] text-text-dim">via QIEDEX</span>
+        {price ? (
+          <>
+            <span className="flex items-center gap-1.5 font-display text-sm font-bold text-text">
+              1 QIE ≈ {price.display}
+              <ExternalLink size={12} className="text-text-dim transition-colors group-hover:text-brand-primary-light" />
+            </span>
+            <span className="text-[11px] text-text-dim">via QIEDEX</span>
+          </>
+        ) : (
+          <>
+            <span className="flex items-center gap-1.5 font-display text-sm font-semibold text-text-secondary">
+              QIEDEX integration live
+              <ExternalLink size={12} className="text-text-dim transition-colors group-hover:text-brand-primary-light" />
+            </span>
+            <span className="text-[11px] text-text-dim">Awaiting price data</span>
+          </>
+        )}
       </span>
     </a>
   )
