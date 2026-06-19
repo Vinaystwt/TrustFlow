@@ -2,20 +2,24 @@
 
 import { useCallback, useState } from 'react'
 import { useAccount, useWalletClient } from 'wagmi'
-import { Droplets, Loader2, Check, Copy } from 'lucide-react'
+import { Droplets, Loader2, Check, ArrowLeftRight } from 'lucide-react'
 import { useMintQUSDC, useQUSDCBalance } from '@/hooks/useTrustFlow'
 import { useToast } from '@/components/Toast'
 import { explorerTx } from '@/lib/chains'
 import { formatQUSDC, friendlyError, cx } from '@/lib/utils'
-import { QUSDC_ADDRESS } from '@/lib/contracts'
+import { useContracts } from '@/lib/useContracts'
 
-const WATCH_ASSET_PARAMS = {
-  type: 'ERC20' as const,
-  options: {
-    address: QUSDC_ADDRESS,
-    symbol: 'QUSDC',
-    decimals: 6,
-  },
+const BRIDGE_URL = 'https://bridge.qie.digital/'
+
+function watchAssetParams(qusdcAddress: string) {
+  return {
+    type: 'ERC20' as const,
+    options: {
+      address: qusdcAddress,
+      symbol: 'QUSDC',
+      decimals: 6,
+    },
+  }
 }
 
 /**
@@ -25,12 +29,13 @@ const WATCH_ASSET_PARAMS = {
  */
 async function requestWatchAsset(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  walletClient: any
+  walletClient: any,
+  qusdcAddress: string
 ): Promise<boolean> {
   try {
     const result = await walletClient.request({
       method: 'wallet_watchAsset',
-      params: WATCH_ASSET_PARAMS,
+      params: watchAssetParams(qusdcAddress),
     })
     return !!result
   } catch {
@@ -39,12 +44,12 @@ async function requestWatchAsset(
 }
 
 /** Fallback: try raw window.ethereum if walletClient unavailable */
-async function requestWatchAssetFallback(): Promise<boolean> {
+async function requestWatchAssetFallback(qusdcAddress: string): Promise<boolean> {
   if (typeof window === 'undefined' || !window.ethereum) return false
   try {
     const result = await window.ethereum.request({
       method: 'wallet_watchAsset',
-      params: WATCH_ASSET_PARAMS,
+      params: watchAssetParams(qusdcAddress),
     })
     return !!result
   } catch {
@@ -52,8 +57,26 @@ async function requestWatchAssetFallback(): Promise<boolean> {
   }
 }
 
-function copyAddress() {
-  navigator.clipboard?.writeText(QUSDC_ADDRESS).catch(() => {})
+// ---------------------------------------------------------------------------
+// BridgeButton: shown on mainnet (no faucet) to get QUSDC via the bridge
+// ---------------------------------------------------------------------------
+
+function BridgeButton({ className, compact }: { className?: string; compact?: boolean }) {
+  return (
+    <a
+      href={BRIDGE_URL}
+      target="_blank"
+      rel="noreferrer"
+      title="QUSDC on mainnet is bridged from real USDC. Get QUSDC by bridging at bridge.qie.digital."
+      className={cx(
+        'inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 font-display text-xs font-semibold text-text-secondary transition-colors hover:border-brand-primary/40 hover:text-text',
+        className
+      )}
+    >
+      <ArrowLeftRight size={14} />
+      {compact ? 'Bridge' : 'Bridge USDC → QUSDC'}
+    </a>
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -62,13 +85,14 @@ function copyAddress() {
 
 export function AddTokenButton({ className }: { className?: string }) {
   const { data: walletClient } = useWalletClient()
+  const { qusdcAddress } = useContracts()
   const { toast } = useToast()
   const [done, setDone] = useState(false)
 
   const handle = async () => {
     const ok = walletClient
-      ? await requestWatchAsset(walletClient)
-      : await requestWatchAssetFallback()
+      ? await requestWatchAsset(walletClient, qusdcAddress)
+      : await requestWatchAssetFallback(qusdcAddress)
 
     if (ok) {
       setDone(true)
@@ -76,7 +100,7 @@ export function AddTokenButton({ className }: { className?: string }) {
     } else {
       toast({
         type: 'info',
-        message: `Could not auto-add token. Add manually: ${QUSDC_ADDRESS.slice(0, 6)}...${QUSDC_ADDRESS.slice(-4)} (QUSDC, 6 decimals)`,
+        message: `Could not auto-add token. Add manually: ${qusdcAddress.slice(0, 6)}...${qusdcAddress.slice(-4)} (QUSDC, 6 decimals)`,
       })
     }
   }
@@ -99,7 +123,8 @@ export function AddTokenButton({ className }: { className?: string }) {
 }
 
 // ---------------------------------------------------------------------------
-// FaucetButton: mint QUSDC then prompt token import
+// FaucetButton: mint QUSDC then prompt token import (testnet),
+// or a bridge link (mainnet)
 // ---------------------------------------------------------------------------
 
 export function FaucetButton({
@@ -111,6 +136,7 @@ export function FaucetButton({
 }) {
   const { address } = useAccount()
   const { data: walletClient } = useWalletClient()
+  const { qusdcAddress, hasFaucet } = useContracts()
   const { balance, refetch } = useQUSDCBalance(address)
   const { mint, status } = useMintQUSDC()
   const { toast } = useToast()
@@ -130,18 +156,18 @@ export function FaucetButton({
       setJustMinted(true)
       refetch()
 
-      // Small delay so MetaMask's tx-confirmed notification clears first
+      // Small delay so the wallet's tx-confirmed notification clears first
       await new Promise((r) => setTimeout(r, 1200))
 
       // Prompt wallet to import QUSDC token
       const ok = walletClient
-        ? await requestWatchAsset(walletClient)
-        : await requestWatchAssetFallback()
+        ? await requestWatchAsset(walletClient, qusdcAddress)
+        : await requestWatchAssetFallback(qusdcAddress)
 
       if (!ok) {
         toast({
           type: 'info',
-          message: `Auto-import failed. Add QUSDC manually: ${QUSDC_ADDRESS.slice(0, 6)}...${QUSDC_ADDRESS.slice(-4)}`,
+          message: `Auto-import failed. Add QUSDC manually: ${qusdcAddress.slice(0, 6)}...${qusdcAddress.slice(-4)}`,
         })
       }
 
@@ -149,9 +175,23 @@ export function FaucetButton({
     } catch (e) {
       toast({ type: 'error', message: friendlyError(e) })
     }
-  }, [address, loading, mint, toast, refetch, walletClient])
+  }, [address, loading, mint, toast, refetch, walletClient, qusdcAddress])
 
   if (!address) return null
+
+  // Mainnet: no faucet, point users to the bridge instead.
+  if (!hasFaucet) {
+    return (
+      <div className={cx('flex items-center gap-3', className)}>
+        {!compact && balance !== undefined && (
+          <span className="font-mono text-sm text-text-secondary">
+            {formatQUSDC(balance)}
+          </span>
+        )}
+        <BridgeButton compact={compact} />
+      </div>
+    )
+  }
 
   return (
     <div className={cx('flex items-center gap-3', className)}>

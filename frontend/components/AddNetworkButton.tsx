@@ -4,16 +4,11 @@ import { useState } from 'react'
 import { useAccount, useSwitchChain } from 'wagmi'
 import { Globe, Check, Loader2, AlertCircle } from 'lucide-react'
 import { cx } from '@/lib/utils'
-
-const QIE_CHAIN_PARAMS = {
-  chainId: '0x7BF',
-  chainName: 'QIE Testnet',
-  nativeCurrency: { name: 'QIE', symbol: 'QIE', decimals: 18 },
-  rpcUrls: ['https://rpc1testnet.qie.digital/'],
-  blockExplorerUrls: ['https://testnet.qie.digital/'],
-} as const
+import { useContracts } from '@/lib/useContracts'
+import { networkByChainId } from '@/lib/chains'
 
 export function AddNetworkButton({ className }: { className?: string }) {
+  const { chainId, networkName, explorer, rpcUrl } = useContracts()
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   const handleAdd = async () => {
@@ -25,7 +20,15 @@ export function AddNetworkButton({ className }: { className?: string }) {
     try {
       await window.ethereum.request({
         method: 'wallet_addEthereumChain',
-        params: [QIE_CHAIN_PARAMS],
+        params: [
+          {
+            chainId: `0x${chainId.toString(16)}`,
+            chainName: networkName,
+            nativeCurrency: { name: 'QIE', symbol: 'QIE', decimals: 18 },
+            rpcUrls: [rpcUrl],
+            blockExplorerUrls: [explorer],
+          },
+        ],
       })
       setStatus('success')
       setTimeout(() => setStatus('idle'), 3000)
@@ -62,28 +65,30 @@ export function AddNetworkButton({ className }: { className?: string }) {
         ? 'Network Added!'
         : status === 'error'
           ? 'Try Again'
-          : 'Add QIE Testnet'}
+          : `Add ${networkName}`}
     </button>
   )
 }
 
-/** Banner shown when user is connected but on wrong chain */
+/** Banner shown when the wallet is connected but on a chain that is neither QIE network. */
 export function WrongNetworkBanner() {
   const { isConnected, chainId } = useAccount()
   const { switchChain } = useSwitchChain()
+  const { chainId: activeChainId, networkName } = useContracts()
 
-  if (!isConnected || chainId === 1983) return null
+  // Only warn when connected to a chain that is not a recognised QIE network.
+  if (!isConnected || networkByChainId(chainId)) return null
 
   return (
     <div className="border-b border-danger/30 bg-danger/10 px-4 py-2.5 text-center">
       <p className="inline-flex flex-wrap items-center justify-center gap-2 text-sm text-danger">
         <AlertCircle size={15} />
-        Wrong network detected. TrustFlow runs on QIE Testnet.
+        Wrong network detected. TrustFlow runs on QIE.
         <button
-          onClick={() => switchChain?.({ chainId: 1983 })}
+          onClick={() => switchChain?.({ chainId: activeChainId })}
           className="rounded-lg bg-danger/20 px-3 py-1 font-display text-xs font-semibold text-danger hover:bg-danger/30"
         >
-          Switch Network
+          Switch to {networkName}
         </button>
       </p>
     </div>

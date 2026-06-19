@@ -8,6 +8,7 @@ import { Menu, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Logo } from './Logo'
 import { FaucetButton } from './FaucetButton'
+import { NetworkSwitcher } from './NetworkSwitcher'
 import { cx } from '@/lib/utils'
 
 const NAV = [
@@ -61,6 +62,9 @@ export function Header() {
             <FaucetButton compact />
           </div>
           <div className="hidden sm:block">
+            <NetworkSwitcher />
+          </div>
+          <div className="hidden sm:block">
             <ConnectButton
               accountStatus="address"
               chainStatus="icon"
@@ -102,6 +106,9 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
+              <div className="mt-2">
+                <NetworkSwitcher block />
+              </div>
               <div className="mt-2">
                 <ConnectButton
                   accountStatus="address"

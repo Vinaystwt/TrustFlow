@@ -18,7 +18,9 @@ import {
 import { PageWrapper } from '@/components/PageWrapper'
 import { AddNetworkButton } from '@/components/AddNetworkButton'
 import { FaucetButton, AddTokenButton } from '@/components/FaucetButton'
+import { NetworkBadge } from '@/components/NetworkBadge'
 import { useQUSDCBalance } from '@/hooks/useTrustFlow'
+import { useContracts } from '@/lib/useContracts'
 import { cx } from '@/lib/utils'
 
 interface Step {
@@ -28,7 +30,7 @@ interface Step {
   description: string
 }
 
-const STEPS: Step[] = [
+const STEPS_TESTNET: Step[] = [
   {
     id: 'network',
     icon: Globe,
@@ -61,21 +63,57 @@ const STEPS: Step[] = [
   },
 ]
 
+const STEPS_MAINNET: Step[] = [
+  {
+    id: 'network',
+    icon: Globe,
+    title: 'Add QIE Mainnet',
+    description: 'Add QIE Mainnet to your wallet so you can interact with TrustFlow in production.',
+  },
+  {
+    id: 'gas',
+    icon: Fuel,
+    title: 'Get QIE for gas',
+    description: 'You need QIE to pay transaction fees. Buy on an exchange or bridge in.',
+  },
+  {
+    id: 'qusdc',
+    icon: Droplets,
+    title: 'Bridge USDC to QUSDC',
+    description: 'QUSDC on mainnet is bridged from real USDC. Bridge at bridge.qie.digital.',
+  },
+  {
+    id: 'token',
+    icon: Wallet,
+    title: 'Add QUSDC to your wallet',
+    description: 'Import the QUSDC token so your balance shows in your wallet.',
+  },
+  {
+    id: 'demo',
+    icon: PlayCircle,
+    title: 'Create your first agreement',
+    description: 'Set up a milestone payment agreement and start building on-chain credit.',
+  },
+]
+
 export default function StartPage() {
   const { isConnected, chainId } = useAccount()
   const { address } = useAccount()
   const { balance } = useQUSDCBalance(address)
+  const { chainId: activeChainId, key: networkKey, networkName } = useContracts()
+
+  const STEPS = networkKey === 'mainnet' ? STEPS_MAINNET : STEPS_TESTNET
 
   const [completed, setCompleted] = useState<Record<string, boolean>>({})
 
   const markDone = (id: string) => setCompleted((prev) => ({ ...prev, [id]: true }))
 
-  // Auto-detect completion
+  // Auto-detect completion against the active network
   useEffect(() => {
-    if (isConnected && chainId === 1983) {
+    if (isConnected && chainId === activeChainId) {
       markDone('network')
     }
-  }, [isConnected, chainId])
+  }, [isConnected, chainId, activeChainId])
 
   useEffect(() => {
     if (balance !== undefined && balance > 0n) {
@@ -102,7 +140,8 @@ export default function StartPage() {
           <p className="mt-2 text-text-secondary">
             Five steps to your first on-chain payment agreement. Takes about 3 minutes.
           </p>
-          <div className="mt-4 flex justify-center">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            <NetworkBadge />
             <div className="flex items-center gap-2 rounded-full bg-bg-subtle px-4 py-1.5 text-sm text-text-secondary">
               <span className="font-mono font-semibold text-brand-primary-light">{completedCount}/{STEPS.length}</span>
               steps complete
@@ -154,29 +193,48 @@ export default function StartPage() {
                   <div className="mt-3">
                     {step.id === 'network' && !done && <AddNetworkButton />}
                     {step.id === 'network' && done && (
-                      <p className="text-sm text-success">QIE Testnet connected.</p>
+                      <p className="text-sm text-success">{networkName} connected.</p>
                     )}
 
                     {step.id === 'gas' && (
                       <div className="flex flex-wrap items-center gap-3">
-                        <a
-                          href="https://www.qie.digital/faucet"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2.5 font-display text-sm font-semibold text-text-secondary transition-colors hover:border-brand-primary/40 hover:text-text"
-                          onClick={() => markDone('gas')}
-                        >
-                          <ExternalLink size={15} /> Open QIE Faucet
-                        </a>
-                        <span className="text-xs text-text-dim">
-                          Request testnet QIE, then return here
-                        </span>
+                        {networkKey === 'mainnet' ? (
+                          <>
+                            <a
+                              href="https://bridge.qie.digital/"
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2.5 font-display text-sm font-semibold text-text-secondary transition-colors hover:border-brand-primary/40 hover:text-text"
+                              onClick={() => markDone('gas')}
+                            >
+                              <ExternalLink size={15} /> Open QIE Bridge
+                            </a>
+                            <span className="text-xs text-text-dim">
+                              Buy QIE on an exchange or bridge in, then return here
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <a
+                              href="https://www.qie.digital/faucet"
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2.5 font-display text-sm font-semibold text-text-secondary transition-colors hover:border-brand-primary/40 hover:text-text"
+                              onClick={() => markDone('gas')}
+                            >
+                              <ExternalLink size={15} /> Open QIE Faucet
+                            </a>
+                            <span className="text-xs text-text-dim">
+                              Request testnet QIE, then return here
+                            </span>
+                          </>
+                        )}
                       </div>
                     )}
 
                     {step.id === 'qusdc' && !done && <FaucetButton />}
                     {step.id === 'qusdc' && done && (
-                      <p className="text-sm text-success">Test QUSDC in your wallet.</p>
+                      <p className="text-sm text-success">QUSDC in your wallet.</p>
                     )}
 
                     {step.id === 'token' && !done && (
@@ -186,13 +244,22 @@ export default function StartPage() {
                       <p className="text-sm text-success">QUSDC visible in your wallet.</p>
                     )}
 
-                    {step.id === 'demo' && (
+                    {step.id === 'demo' && networkKey === 'testnet' && (
                       <Link
                         href="/demo"
                         className="inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 font-display text-sm font-semibold text-white transition-transform active:scale-[0.97]"
                         style={{ background: 'var(--gradient-hero)' }}
                       >
                         Start Solo Demo <ArrowRight size={16} />
+                      </Link>
+                    )}
+                    {step.id === 'demo' && networkKey === 'mainnet' && (
+                      <Link
+                        href="/create"
+                        className="inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 font-display text-sm font-semibold text-white transition-transform active:scale-[0.97]"
+                        style={{ background: 'var(--gradient-hero)' }}
+                      >
+                        Create Agreement <ArrowRight size={16} />
                       </Link>
                     )}
                   </div>

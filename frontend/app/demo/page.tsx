@@ -32,6 +32,8 @@ import {
 } from '@/hooks/useTrustFlow'
 import { explorerTx } from '@/lib/chains'
 import { formatQUSDC, friendlyError, cx } from '@/lib/utils'
+import { useContracts } from '@/lib/useContracts'
+import { useActiveNetwork } from '@/hooks/useActiveNetwork'
 import type { Address } from 'viem'
 
 const RELAYER_ADDRESS = (process.env.NEXT_PUBLIC_RELAYER_ADDRESS || '') as Address
@@ -64,6 +66,8 @@ export default function DemoPage() {
   const { address, isConnected } = useAccount()
   const { openConnectModal } = useConnectModal()
   const { toast } = useToast()
+  const { hasRelayer } = useContracts()
+  const { setActiveNetwork } = useActiveNetwork()
 
   const [step, setStep] = useState<DemoStep>('intro')
   const [agreementId, setAgreementId] = useState<bigint | undefined>()
@@ -179,6 +183,63 @@ export default function DemoPage() {
   }, [step, busy, agreementId, relayerFailed, handleApprove])
 
   // --- Render ---
+
+  // Mainnet: the hosted demo client is testnet-only. Show manual instructions.
+  if (!hasRelayer) {
+    const STEPS_MANUAL = [
+      'Open TrustFlow in two browsers (or one normal plus one incognito) with different wallets.',
+      'In wallet A, create an agreement and set wallet B’s address as the client.',
+      'In wallet B, open the agreement link and fund it with QUSDC.',
+      'In wallet A, complete a milestone.',
+      'In wallet B, approve. Payment releases to A.',
+    ]
+    return (
+      <PageWrapper className="max-w-2xl">
+        <div className="card px-6 py-12">
+          <div className="flex flex-col items-center text-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-amber/15 text-accent-amber">
+              <AlertCircle size={28} />
+            </span>
+            <h1 className="mt-5 font-display text-2xl font-bold tracking-tight text-text">
+              Solo demo is testnet-only
+            </h1>
+            <p className="mt-3 max-w-md text-sm text-text-secondary">
+              The solo demo uses a hosted client wallet, which is available on
+              testnet only for security reasons. To try TrustFlow on mainnet, use
+              two wallets:
+            </p>
+          </div>
+
+          <ol className="mx-auto mt-6 max-w-lg space-y-3">
+            {STEPS_MANUAL.map((s, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-primary/15 font-display text-sm font-bold text-brand-primary-light">
+                  {i + 1}
+                </span>
+                <span className="pt-0.5 text-sm text-text-secondary">{s}</span>
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <button
+              onClick={() => setActiveNetwork('testnet')}
+              className="inline-flex items-center gap-2 rounded-xl px-6 py-3 font-display text-sm font-semibold text-white transition-transform active:scale-[0.97]"
+              style={{ background: 'var(--gradient-hero)' }}
+            >
+              Switch to Testnet <ArrowRight size={16} />
+            </button>
+            <Link
+              href="/create"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border px-6 py-3 font-display text-sm font-semibold text-text-secondary hover:text-text"
+            >
+              Create Real Agreement
+            </Link>
+          </div>
+        </div>
+      </PageWrapper>
+    )
+  }
 
   if (!isConnected) {
     return (

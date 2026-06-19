@@ -9,12 +9,8 @@ import {
 } from 'wagmi'
 import { waitForTransactionReceipt } from '@wagmi/core'
 import { decodeEventLog, maxUint256, type Address, type Hash } from 'viem'
-import {
-  TRUSTFLOW_ABI,
-  TRUSTFLOW_ADDRESS,
-  ERC20_ABI,
-  QUSDC_ADDRESS,
-} from '@/lib/contracts'
+import { TRUSTFLOW_ABI, ERC20_ABI } from '@/lib/contracts'
+import { useContracts } from '@/lib/useContracts'
 import type { Agreement, Milestone, TrustProfile, EnforcedTerms } from '@/lib/utils'
 
 const READ_OPTS = { staleTime: 10_000 }
@@ -24,9 +20,11 @@ const READ_OPTS = { staleTime: 10_000 }
 // ---------------------------------------------------------------------------
 
 export function useGetAgreement(agreementId?: bigint) {
+  const { trustFlowAddress, chainId } = useContracts()
   const q = useReadContract({
     abi: TRUSTFLOW_ABI,
-    address: TRUSTFLOW_ADDRESS,
+    address: trustFlowAddress,
+    chainId,
     functionName: 'getAgreement',
     args: agreementId !== undefined ? [agreementId] : undefined,
     query: { enabled: agreementId !== undefined, ...READ_OPTS },
@@ -35,9 +33,11 @@ export function useGetAgreement(agreementId?: bigint) {
 }
 
 export function useGetMilestones(agreementId?: bigint) {
+  const { trustFlowAddress, chainId } = useContracts()
   const q = useReadContract({
     abi: TRUSTFLOW_ABI,
-    address: TRUSTFLOW_ADDRESS,
+    address: trustFlowAddress,
+    chainId,
     functionName: 'getMilestones',
     args: agreementId !== undefined ? [agreementId] : undefined,
     query: { enabled: agreementId !== undefined, ...READ_OPTS },
@@ -46,9 +46,11 @@ export function useGetMilestones(agreementId?: bigint) {
 }
 
 export function useGetUserAgreements(userAddress?: Address) {
+  const { trustFlowAddress, chainId } = useContracts()
   const q = useReadContract({
     abi: TRUSTFLOW_ABI,
-    address: TRUSTFLOW_ADDRESS,
+    address: trustFlowAddress,
+    chainId,
     functionName: 'getUserAgreements',
     args: userAddress ? [userAddress] : undefined,
     query: { enabled: !!userAddress, ...READ_OPTS },
@@ -57,9 +59,11 @@ export function useGetUserAgreements(userAddress?: Address) {
 }
 
 export function useGetTrustProfile(userAddress?: Address) {
+  const { trustFlowAddress, chainId } = useContracts()
   const q = useReadContract({
     abi: TRUSTFLOW_ABI,
-    address: TRUSTFLOW_ADDRESS,
+    address: trustFlowAddress,
+    chainId,
     functionName: 'getTrustProfile',
     args: userAddress ? [userAddress] : undefined,
     query: { enabled: !!userAddress, ...READ_OPTS },
@@ -68,9 +72,11 @@ export function useGetTrustProfile(userAddress?: Address) {
 }
 
 export function useGetEnforcedTerms(userAddress?: Address) {
+  const { trustFlowAddress, chainId } = useContracts()
   const q = useReadContract({
     abi: TRUSTFLOW_ABI,
-    address: TRUSTFLOW_ADDRESS,
+    address: trustFlowAddress,
+    chainId,
     functionName: 'getEnforcedTerms',
     args: userAddress ? [userAddress] : undefined,
     query: { enabled: !!userAddress, ...READ_OPTS },
@@ -97,9 +103,11 @@ export function useGetEnforcedTerms(userAddress?: Address) {
 // ---------------------------------------------------------------------------
 
 export function useQUSDCBalance(address?: Address) {
+  const { qusdcAddress, chainId } = useContracts()
   const q = useReadContract({
     abi: ERC20_ABI,
-    address: QUSDC_ADDRESS,
+    address: qusdcAddress,
+    chainId,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: { enabled: !!address, ...READ_OPTS },
@@ -108,11 +116,13 @@ export function useQUSDCBalance(address?: Address) {
 }
 
 export function useQUSDCAllowance(owner?: Address) {
+  const { trustFlowAddress, qusdcAddress, chainId } = useContracts()
   const q = useReadContract({
     abi: ERC20_ABI,
-    address: QUSDC_ADDRESS,
+    address: qusdcAddress,
+    chainId,
     functionName: 'allowance',
-    args: owner ? [owner, TRUSTFLOW_ADDRESS] : undefined,
+    args: owner ? [owner, trustFlowAddress] : undefined,
     query: { enabled: !!owner, ...READ_OPTS },
   } as UseReadContractParameters)
   return { ...q, allowance: q.data as bigint | undefined }
@@ -133,6 +143,7 @@ interface WriteResult {
 
 function useTrustFlowWrite() {
   const config = useConfig()
+  const { trustFlowAddress, chainId } = useContracts()
   const { writeContractAsync } = useWriteContract()
   const [status, setStatus] = useState<WriteStatus>('idle')
   const [hash, setHash] = useState<Hash>()
@@ -151,12 +162,13 @@ function useTrustFlowWrite() {
       try {
         const txHash = await writeContractAsync({
           abi: TRUSTFLOW_ABI,
-          address: TRUSTFLOW_ADDRESS,
+          address: trustFlowAddress,
+          chainId,
           functionName: functionName as never,
           args: args as never,
         })
         setHash(txHash)
-        await waitForTransactionReceipt(config, { hash: txHash })
+        await waitForTransactionReceipt(config, { hash: txHash, chainId })
         setStatus('success')
         return txHash
       } catch (e) {
@@ -165,7 +177,7 @@ function useTrustFlowWrite() {
         throw e
       }
     },
-    [config, writeContractAsync]
+    [config, writeContractAsync, trustFlowAddress, chainId]
   )
 
   return { run, status, hash, error, reset }
@@ -177,6 +189,7 @@ function useTrustFlowWrite() {
 
 export function useCreateAgreement() {
   const config = useConfig()
+  const { trustFlowAddress, chainId } = useContracts()
   const { writeContractAsync } = useWriteContract()
   const [status, setStatus] = useState<WriteStatus>('idle')
   const [hash, setHash] = useState<Hash>()
@@ -202,7 +215,8 @@ export function useCreateAgreement() {
       try {
         const txHash = await writeContractAsync({
           abi: TRUSTFLOW_ABI,
-          address: TRUSTFLOW_ADDRESS,
+          address: trustFlowAddress,
+          chainId,
           functionName: 'createAgreement',
           args: [
             params.title,
@@ -214,7 +228,7 @@ export function useCreateAgreement() {
           ],
         })
         setHash(txHash)
-        const receipt = await waitForTransactionReceipt(config, { hash: txHash })
+        const receipt = await waitForTransactionReceipt(config, { hash: txHash, chainId })
 
         let agreementId: bigint | undefined
         for (const log of receipt.logs) {
@@ -241,7 +255,7 @@ export function useCreateAgreement() {
         throw e
       }
     },
-    [config, writeContractAsync]
+    [config, writeContractAsync, trustFlowAddress, chainId]
   )
 
   return { create, status, hash, error, reset }
@@ -255,6 +269,7 @@ export type FundStep = 'idle' | 'approving' | 'funding' | 'success' | 'error'
 
 export function useFundAgreement() {
   const config = useConfig()
+  const { trustFlowAddress, qusdcAddress, chainId } = useContracts()
   const { writeContractAsync } = useWriteContract()
   const [step, setStep] = useState<FundStep>('idle')
   const [hash, setHash] = useState<Hash>()
@@ -274,22 +289,24 @@ export function useFundAgreement() {
           setStep('approving')
           const approveHash = await writeContractAsync({
             abi: ERC20_ABI,
-            address: QUSDC_ADDRESS,
+            address: qusdcAddress,
+            chainId,
             functionName: 'approve',
-            args: [TRUSTFLOW_ADDRESS, maxUint256],
+            args: [trustFlowAddress, maxUint256],
           })
-          await waitForTransactionReceipt(config, { hash: approveHash })
+          await waitForTransactionReceipt(config, { hash: approveHash, chainId })
         }
 
         setStep('funding')
         const fundHash = await writeContractAsync({
           abi: TRUSTFLOW_ABI,
-          address: TRUSTFLOW_ADDRESS,
+          address: trustFlowAddress,
+          chainId,
           functionName: 'fundAgreement',
           args: [agreementId],
         })
         setHash(fundHash)
-        await waitForTransactionReceipt(config, { hash: fundHash })
+        await waitForTransactionReceipt(config, { hash: fundHash, chainId })
         setStep('success')
         return fundHash
       } catch (e) {
@@ -298,7 +315,7 @@ export function useFundAgreement() {
         throw e
       }
     },
-    [config, writeContractAsync]
+    [config, writeContractAsync, trustFlowAddress, qusdcAddress, chainId]
   )
 
   return { fund, step, hash, error, reset }
@@ -354,6 +371,7 @@ export function useClaimMilestone() {
 
 export function useMintQUSDC() {
   const config = useConfig()
+  const { qusdcAddress, chainId } = useContracts()
   const { writeContractAsync } = useWriteContract()
   const [status, setStatus] = useState<WriteStatus>('idle')
   const [hash, setHash] = useState<Hash>()
@@ -372,12 +390,13 @@ export function useMintQUSDC() {
       try {
         const txHash = await writeContractAsync({
           abi: ERC20_ABI,
-          address: QUSDC_ADDRESS,
+          address: qusdcAddress,
+          chainId,
           functionName: 'mint',
           args: [to, amount],
         })
         setHash(txHash)
-        await waitForTransactionReceipt(config, { hash: txHash })
+        await waitForTransactionReceipt(config, { hash: txHash, chainId })
         setStatus('success')
         return txHash
       } catch (e) {
@@ -386,7 +405,7 @@ export function useMintQUSDC() {
         throw e
       }
     },
-    [config, writeContractAsync]
+    [config, writeContractAsync, qusdcAddress, chainId]
   )
 
   return { mint, status, hash, error, reset }

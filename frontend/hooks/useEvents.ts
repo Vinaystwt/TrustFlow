@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { usePublicClient } from 'wagmi'
 import { decodeEventLog, type Address, type Hash } from 'viem'
-import { TRUSTFLOW_ABI, TRUSTFLOW_ADDRESS } from '@/lib/contracts'
+import { TRUSTFLOW_ABI } from '@/lib/contracts'
+import { useContracts } from '@/lib/useContracts'
 
 export interface ProtocolEvent {
   eventName: string
@@ -14,7 +15,8 @@ export interface ProtocolEvent {
 }
 
 async function fetchLogs(
-  client: ReturnType<typeof usePublicClient>
+  client: ReturnType<typeof usePublicClient>,
+  contractAddress: Address
 ): Promise<ProtocolEvent[]> {
   if (!client) return []
   const latest = await client.getBlockNumber()
@@ -28,7 +30,7 @@ async function fetchLogs(
   for (const range of ranges) {
     try {
       const logs = await client.getLogs({
-        address: TRUSTFLOW_ADDRESS,
+        address: contractAddress,
         fromBlock: range.from,
         toBlock: range.to,
       })
@@ -65,14 +67,17 @@ async function fetchLogs(
 }
 
 export function useProtocolEvents(refetchMs?: number) {
-  const client = usePublicClient()
+  const { trustFlowAddress, chainId } = useContracts()
+  const client = usePublicClient({ chainId })
   const [events, setEvents] = useState<ProtocolEvent[]>([])
   const [isLoading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
+    setLoading(true)
+    setEvents([])
     const run = async () => {
-      const data = await fetchLogs(client)
+      const data = await fetchLogs(client, trustFlowAddress)
       if (active) {
         setEvents(data)
         setLoading(false)
@@ -86,7 +91,7 @@ export function useProtocolEvents(refetchMs?: number) {
       if (timer) clearInterval(timer)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, refetchMs])
+  }, [client, refetchMs, trustFlowAddress, chainId])
 
   return { events, isLoading }
 }
