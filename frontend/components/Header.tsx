@@ -67,7 +67,7 @@ export function Header() {
           <div className="hidden sm:block">
             <ConnectButton
               accountStatus="address"
-              chainStatus="icon"
+              chainStatus="none"
               showBalance={false}
             />
           </div>
@@ -112,7 +112,7 @@ export function Header() {
               <div className="mt-2">
                 <ConnectButton
                   accountStatus="address"
-                  chainStatus="icon"
+                  chainStatus="none"
                   showBalance={false}
                 />
               </div>
