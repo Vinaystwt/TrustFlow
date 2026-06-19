@@ -9,7 +9,8 @@ import {
   getDefaultConfig,
 } from '@rainbow-me/rainbowkit'
 import '@rainbow-me/rainbowkit/styles.css'
-import { qieTestnet } from '@/lib/chains'
+import { qieMainnet, qieTestnet } from '@/lib/chains'
+import { NetworkProvider } from '@/hooks/useActiveNetwork'
 
 // ---------------------------------------------------------------------------
 // getDefaultConfig sets up wagmi with:
@@ -27,8 +28,9 @@ const wagmiConfig = getDefaultConfig({
   projectId:
     process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ||
     '5233990d7a53451d12de1cdb03910795',
-  chains: [qieTestnet],
+  chains: [qieMainnet, qieTestnet],
   transports: {
+    [qieMainnet.id]: http('https://rpc1mainnet.qie.digital/'),
     [qieTestnet.id]: http('https://rpc1testnet.qie.digital/'),
   },
   ssr: true,
@@ -47,9 +49,11 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={rkTheme} modalSize="compact">
-          {children}
-        </RainbowKitProvider>
+        <NetworkProvider>
+          <RainbowKitProvider theme={rkTheme} modalSize="compact">
+            {children}
+          </RainbowKitProvider>
+        </NetworkProvider>
       </QueryClientProvider>
     </WagmiProvider>
   )
